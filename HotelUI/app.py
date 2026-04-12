@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import mysql.connector
 from mysql.connector import Error
 
@@ -18,8 +18,42 @@ DB_CONFIG = {
 def get_db():
     return mysql.connector.connect(**DB_CONFIG)
 
+# ─── MIDDLEWARE-LIKE DECORATOR ───
+def login_required(role=None):
+    def decorator(f):
+        from functools import wraps
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'role' not in session:
+                return redirect(url_for('login'))
+            if role and session['role'] != role:
+                flash(f'Buraya erişmek için {role} yetkisi gerekiyor.', 'error')
+                return redirect(url_for('dashboard'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+# ─── AUTH / LOGIN ───
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        role = request.form.get('role')
+        user_id = request.form.get('user_id', 1) # Varsayılan olarak ID 1
+        session['role'] = role
+        session['user_id'] = user_id
+        session['user_name'] = 'Admin' if role == 'Employer' else 'Misafir'
+        flash(f'{role} olarak giriş yapıldı.', 'success')
+        return redirect(url_for('dashboard'))
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
 # ─── DASHBOARD ───
 @app.route('/')
+@login_required()
 def dashboard():
     db = get_db()
     cur = db.cursor(dictionary=True)
@@ -43,6 +77,7 @@ def dashboard():
 
 # ─── QUERY 1: Guests by property & month ───
 @app.route('/guests', methods=['GET'])
+@login_required(role='Employer')
 def guests_page():
     db = get_db()
     cur = db.cursor(dictionary=True)
@@ -77,6 +112,7 @@ def guests_page():
 
 # ─── QUERY 2: Properties overview ───
 @app.route('/properties')
+@login_required(role='Employer')
 def properties_page():
     db = get_db()
     cur = db.cursor(dictionary=True)
@@ -99,6 +135,7 @@ def properties_page():
 
 # ─── QUERY 3: Change booking date ───
 @app.route('/manage-booking', methods=['GET', 'POST'])
+@login_required(role='Customer')
 def manage_booking():
     db = get_db()
     cur = db.cursor(dictionary=True)
@@ -145,6 +182,7 @@ def manage_booking():
 
 # ─── QUERY 4: Make a payment ───
 @app.route('/payments', methods=['GET', 'POST'])
+@login_required(role='Customer')
 def payments_page():
     db = get_db()
     cur = db.cursor(dictionary=True)
