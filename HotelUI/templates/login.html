@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Giriş - HotelMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+    <div class="card" style="width: 100%; max-width: 400px; padding: 40px; text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 20px;">🏨</div>
+        <h1 style="margin-bottom: 8px;">Hoş Geldiniz</h1>
+        <p style="color: var(--text-muted); margin-bottom: 32px;">Lütfen devam etmek için bir rol seçin</p>
+
+        <form action="{{ url_for('login') }}" method="POST">
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label style="text-align: left; display: block;">Rolünüz</label>
+                <select name="role" required style="width: 100%; padding: 12px;">
+                    <option value="" disabled selected>Bir rol seçin...</option>
+                    <option value="Employer">İşveren (Employer)</option>
+                    <option value="Customer">Müşteri (Customer)</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 32px;">
+                <label style="text-align: left; display: block;">Kullanıcı ID (Simüle)</label>
+                <input type="number" name="user_id" value="1" required style="width: 100%; padding: 12px;">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;">
+                Giriş Yap
+            </button>
+        </form>
+        
+        <div style="margin-top: 24px; font-size: 12px; color: var(--text-muted);">
+            <p>Seçilen role göre menü ve yetkiler değişecektir.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
