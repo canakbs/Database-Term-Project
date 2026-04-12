@@ -6,6 +6,7 @@
     <p>Hotel Management System Overview</p>
 </div>
 
+{% if session.role == 'Employer' %}
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon">📅</div>
@@ -38,4 +39,25 @@
         <div class="stat-label">Reviews</div>
     </div>
 </div>
+{% else %}
+<div class="card" style="padding: 40px; border-left: 4px solid #60a5fa;">
+    <h2>Merhaba, {{ session.user_name }}! 👋</h2>
+    <p style="color: var(--text-muted); margin-bottom: 30px;">HotelMS üzerinden rezervasyonlarınızı yönetebilir ve ödemelerinizi yapabilirsiniz.</p>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-value">{{ my_bookings_count }}</div>
+            <div class="stat-label">Rezervasyonlarım</div>
+        </div>
+        {% if last_booking %}
+        <div class="stat-card" style="grid-column: span 2;">
+            <div class="stat-icon">🔔</div>
+            <div class="stat-value" style="font-size: 24px;">{{ last_booking.Title }}</div>
+            <div class="stat-label">Son Rezervasyon - {{ last_booking.CheckIn_Date }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}

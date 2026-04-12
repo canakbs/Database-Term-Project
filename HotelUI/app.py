@@ -57,23 +57,43 @@ def logout():
 def dashboard():
     db = get_db()
     cur = db.cursor(dictionary=True)
-    cur.execute("SELECT COUNT(*) AS c FROM BOOKINGS")
-    bookings = cur.fetchone()['c']
-    cur.execute("SELECT COUNT(*) AS c FROM GUESTS")
-    guests = cur.fetchone()['c']
-    cur.execute("SELECT COUNT(*) AS c FROM PROPERTIES")
-    properties = cur.fetchone()['c']
-    cur.execute("SELECT COALESCE(SUM(Total_Amount),0) AS c FROM PAYMENTS")
-    revenue = cur.fetchone()['c']
-    cur.execute("SELECT COUNT(*) AS c FROM REVIEWS")
-    reviews = cur.fetchone()['c']
-    cur.execute("SELECT COALESCE(AVG(Rating),0) AS c FROM REVIEWS")
-    avg_rating = round(cur.fetchone()['c'], 1)
+    
+    data = {}
+    if session['role'] == 'Employer':
+        cur.execute("SELECT COUNT(*) AS c FROM BOOKINGS")
+        data['bookings'] = cur.fetchone()['c']
+        cur.execute("SELECT COUNT(*) AS c FROM GUESTS")
+        data['guests'] = cur.fetchone()['c']
+        cur.execute("SELECT COUNT(*) AS c FROM PROPERTIES")
+        data['properties'] = cur.fetchone()['c']
+        cur.execute("SELECT COALESCE(SUM(Total_Amount),0) AS c FROM PAYMENTS")
+        data['revenue'] = cur.fetchone()['c']
+        cur.execute("SELECT COUNT(*) AS c FROM REVIEWS")
+        data['reviews'] = cur.fetchone()['c']
+        cur.execute("SELECT COALESCE(AVG(Rating),0) AS c FROM REVIEWS")
+        data['avg_rating'] = round(cur.fetchone()['c'] or 0, 1)
+    else:
+        # Customer specific stats
+        cur.execute("""
+            SELECT COUNT(*) AS c FROM BOOKING_DETAILS 
+            WHERE Guest_ID = %s
+        """, (session['user_id'],))
+        data['my_bookings_count'] = cur.fetchone()['c']
+        
+        cur.execute("""
+            SELECT b.Booking_ID, b.CheckIn_Date, p.Title 
+            FROM BOOKINGS b
+            JOIN ROOMS r ON r.Room_ID = b.Room_ID
+            JOIN PROPERTIES p ON p.Property_ID = r.Property_ID
+            JOIN BOOKING_DETAILS bd ON bd.Booking_ID = b.Booking_ID
+            WHERE bd.Guest_ID = %s
+            ORDER BY b.CheckIn_Date DESC LIMIT 1
+        """, (session['user_id'],))
+        data['last_booking'] = cur.fetchone()
+
     cur.close()
     db.close()
-    return render_template('dashboard.html',
-        bookings=bookings, guests=guests, properties=properties,
-        revenue=revenue, reviews=reviews, avg_rating=avg_rating)
+    return render_template('dashboard.html', **data)
 
 # ─── QUERY 1: Guests by property & month ───
 @app.route('/guests', methods=['GET'])
