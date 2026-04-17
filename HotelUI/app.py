@@ -333,8 +333,10 @@ def admin_reports():
         cur.execute("SELECT * FROM HMS_MonthlyGuestTracker LIMIT 20")
     guest_tracker = cur.fetchall()
     
+    # Read AI sentiment directly from DB (persistent)
     cur.execute("""
-        SELECT r.*, u.full_name as guest_name, p.title as property_title
+        SELECT r.review_id, r.rating, r.comment, r.ai_sentiment, r.ai_status, r.created_at,
+               u.full_name as guest_name, p.title as property_title
         FROM Reviews r
         JOIN Bookings b ON r.booking_id = b.booking_id
         JOIN Users u ON b.guest_id = u.user_id
@@ -343,27 +345,50 @@ def admin_reports():
         LIMIT 50
     """)
     all_reviews = cur.fetchall()
-    
-    # Attach AI analysis from session cache
-    ai_cache = app.config.get('review_sentiments', {})
+
+    # Chart data: sentiment distribution
+    sentiment_counts = {'POSITIVE': 0, 'NEGATIVE': 0, 'NOT_ANALYZED': 0}
+    rating_dist = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
     for rev in all_reviews:
-        bid = str(rev['booking_id'])
-        if bid in ai_cache:
-            rev['ai_sentiment'] = ai_cache[bid]['sentiment']
-            rev['ai_status'] = ai_cache[bid]['status']
-        else:
-            rev['ai_sentiment'] = 'NOT_ANALYZED'
-            rev['ai_status'] = 'ACCEPTED' # Assuming old reviews without analysis are accepted
-            
+        s = rev.get('ai_sentiment') or 'NOT_ANALYZED'
+        sentiment_counts[s] = sentiment_counts.get(s, 0) + 1
+        r = rev.get('rating')
+        if r and 1 <= int(r) <= 5:
+            rating_dist[int(r)] += 1
+
+    # Chart data: monthly revenue (last 6 months)
+    cur.execute("""
+        SELECT DATE_FORMAT(payment_date, '%Y-%m') as month,
+               SUM(amount) as revenue
+        FROM Payments
+        WHERE payment_status = 'completed'
+          AND payment_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+        GROUP BY month ORDER BY month
+    """)
+    monthly_revenue = cur.fetchall()
+
+    # Chart data: bookings by city
+    cur.execute("""
+        SELECT p.city, COUNT(b.booking_id) as total
+        FROM Bookings b
+        JOIN Properties p ON b.property_id = p.property_id
+        GROUP BY p.city ORDER BY total DESC LIMIT 8
+    """)
+    city_bookings = cur.fetchall()
+
     cur.close()
     db.close()
-    return render_template('admin_reports.html', 
-        analytics=analytics, 
-        cities=cities, 
+    return render_template('admin_reports.html',
+        analytics=analytics,
+        cities=cities,
         hosts=hosts,
         booking_summary=booking_summary,
         guest_tracker=guest_tracker,
-        ai_reviews=all_reviews
+        ai_reviews=all_reviews,
+        sentiment_counts=sentiment_counts,
+        rating_dist=rating_dist,
+        monthly_revenue=monthly_revenue,
+        city_bookings=city_bookings
     )
 @app.route('/property/<int:id>')
 def property_detail(id):
@@ -406,7 +431,13 @@ def property_detail(id):
     reviews = cur.fetchall()
     
     for review in reviews:
-        if review['booking_id'] in app.config['review_sentiments']:
+        # Read from DB (persistent), fall back to in-memory cache
+        if review.get('ai_sentiment'):
+            review['ai_analysis'] = {
+                'sentiment': review['ai_sentiment'],
+                'status': review.get('ai_status', 'ACCEPTED')
+            }
+        elif review['booking_id'] in app.config['review_sentiments']:
             review['ai_analysis'] = app.config['review_sentiments'][review['booking_id']]
         else:
             review['ai_analysis'] = None
@@ -710,20 +741,26 @@ def submit_review(booking_id):
     
     if booking:
         ai_result = process_review(comment)
+        # Persist AI result in-memory cache AND database
         app.config['review_sentiments'][booking_id] = ai_result
         
         # Use INSERT ... ON DUPLICATE KEY UPDATE since booking_id is UNIQUE
         cur.execute("""
-            INSERT INTO Reviews (booking_id, guest_id, property_id, rating, comment)
-            VALUES (%s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE rating = VALUES(rating), comment = VALUES(comment)
-        """, (booking_id, session['user_id'], booking['property_id'], rating, comment))
+            INSERT INTO Reviews (booking_id, guest_id, property_id, rating, comment, ai_sentiment, ai_status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                rating = VALUES(rating),
+                comment = VALUES(comment),
+                ai_sentiment = VALUES(ai_sentiment),
+                ai_status = VALUES(ai_status)
+        """, (booking_id, session['user_id'], booking['property_id'], rating, comment,
+               ai_result['sentiment'], ai_result['status']))
         db.commit()
         
         if ai_result['status'] == 'REJECTED':
-            flash('Your review contained offensive language and was rejected.', 'error')
+            flash('Yorumunuz uygunsuz dil içerdiği için reddedildi.', 'error')
         else:
-            flash(f'Review updated! Sentiment detected: {ai_result["sentiment"]}.', 'success')
+            flash(f'Yorumunuz kaydedildi! Duygu analizi: {ai_result["sentiment"].capitalize()}.', 'success')
         
     cur.close()
     db.close()
