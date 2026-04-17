@@ -6,165 +6,208 @@
 <div class="checkout-container">
     <div class="checkout-header">
         <h1>Make Payment</h1>
-        <p>Complete your payment for {{ booking.title }}.</p>
+        <p>Complete your payment for <strong>{{ booking.title }}</strong></p>
     </div>
 
-    <div class="checkout-grid">
-        <div class="payment-form-section card shadow-sm">
-            {% if saved_cards %}
-            <h3 style="margin-bottom: 16px;">My Saved Cards</h3>
-            <form action="{{ url_for('checkout', booking_id=booking.booking_id) }}" method="POST" id="saved_card_form">
-                <input type="hidden" name="use_saved_card" value="1">
-                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+    <form action="{{ url_for('checkout', booking_id=booking.booking_id) }}" method="POST" id="payment_form">
+        <div class="checkout-grid">
+            <div class="payment-form-section card shadow-sm">
+                
+                <!-- 1. Card Selection -->
+                {% if saved_cards %}
+                <h3 style="margin-bottom: 24px;"><i class="fa-solid fa-credit-card"></i> Payment Method</h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
                     {% for card in saved_cards %}
-                    <label style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; cursor: pointer; display: flex; align-items: center; gap: 16px;">
-                        <input type="radio" name="card_id" value="{{ card.card_id }}" required>
-                        <div>
-                            <strong>{{ card.card_holder }}</strong><br>
-                            <span style="color: #717171; font-size: 14px;">{{ card.card_number_masked }} (Expires: {{ card.expiry_date }})</span>
+                    <label class="card-option">
+                        <input type="radio" name="selected_card_id" value="{{ card.card_id }}" {% if loop.first %}checked{% endif %} onchange="toggleNewCard(false)">
+                        <div class="card-option-content">
+                            <span class="card-holder">{{ card.card_holder }}</span>
+                            <span class="card-number">{{ card.card_number_masked }}</span>
                         </div>
                     </label>
                     {% endfor %}
+                    
+                    <label class="card-option">
+                        <input type="radio" name="selected_card_id" value="new" onchange="toggleNewCard(true)">
+                        <div class="card-option-content">
+                            <strong>Use a new card</strong>
+                        </div>
+                    </label>
                 </div>
+                {% else %}
+                <input type="hidden" name="selected_card_id" value="new">
+                <h3 style="margin-bottom: 24px;"><i class="fa-solid fa-credit-card"></i> Card Details</h3>
+                {% endif %}
 
-                <div class="form-group">
-                    <label><i class="fa-solid fa-receipt"></i> Payment Plan</label>
-                    <select name="installments" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; background: white;">
-                        <option value="1">Single Payment (Full Amount)</option>
-                        <option value="3">3 Installments (₺{{ (booking.total_price / 3)|round(2) }} / month)</option>
-                        <option value="6">6 Installments (₺{{ (booking.total_price / 6)|round(2) }} / month)</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="btn-pay" style="margin-top: 16px;">Pay ₺{{ booking.total_price }}</button>
-            </form>
-            {% endif %}
-
-            <div style="margin: 32px 0;">
-                <h3 style="margin-bottom: 16px;">Use New Card</h3>
-                <form action="{{ url_for('checkout', booking_id=booking.booking_id) }}" method="POST" id="new_card_form">
-                    <input type="hidden" name="use_saved_card" value="0">
+                <!-- 2. New Card Fields (Hidden if saved card selected) -->
+                <div id="new_card_fields" style="{% if saved_cards %}display: none;{% endif %} border-top: 1px solid #eee; padding-top: 24px;">
                     <div class="form-group">
                         <label>Card Holder Name</label>
-                        <input type="text" name="card_holder" placeholder="Full Name" required>
+                        <input type="text" name="card_holder" placeholder="Name Surname">
                     </div>
                     <div class="form-group">
                         <label>Card Number</label>
-                        <input type="text" name="card_number" placeholder="0000 0000 0000 0000" maxlength="16" required>
+                        <input type="text" name="card_number" placeholder="0000 0000 0000 0000" maxlength="16">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Expiry</label>
-                            <input type="text" name="expiry" placeholder="MM/YYYY" maxlength="7" required>
+                            <input type="text" name="expiry" placeholder="MM/YYYY" maxlength="7">
                         </div>
                         <div class="form-group">
                             <label>CVV</label>
-                            <input type="text" name="cvv" placeholder="000" maxlength="3" required>
+                            <input type="text" name="cvv" placeholder="000" maxlength="3">
                         </div>
                     </div>
-                    
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; margin-top: 8px;">
+                    <label class="checkbox-label">
                         <input type="checkbox" name="save_card"> Save this card for future payments
                     </label>
-                    
-                    <input type="hidden" name="payment_method" value="credit_card">
-                    <input type="hidden" name="amount" value="{{ booking.total_price }}">
+                </div>
 
-                    <div class="form-group" style="margin-top: 24px;">
-                        <label><i class="fa-solid fa-receipt"></i> Payment Plan</label>
-                        <select name="installments" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; background: white;">
-                            <option value="1">Single Payment (Full Amount)</option>
+                <!-- 3. Payment Plan (Installments) - Always Visible -->
+                <div class="installment-section" style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #f8f8f8;">
+                    <h3 style="margin-bottom: 16px;"><i class="fa-solid fa-receipt"></i> Select Payment Plan</h3>
+                    <div class="form-group">
+                        <select name="installments" class="installment-select">
+                            <option value="1">Single Payment (Full Amount - ₺{{ booking.total_price }})</option>
                             <option value="3">3 Installments (₺{{ (booking.total_price / 3)|round(2) }} / month)</option>
                             <option value="6">6 Installments (₺{{ (booking.total_price / 6)|round(2) }} / month)</option>
                             <option value="9">9 Installments (₺{{ (booking.total_price / 9)|round(2) }} / month)</option>
                             <option value="12">12 Installments (₺{{ (booking.total_price / 12)|round(2) }} / month)</option>
                         </select>
-                        <p style="font-size: 12px; color: #717171; margin-top: 8px;">* No interest will be applied for the demo.</p>
+                        <p class="demo-notice">* Interst-free for demo purposes.</p>
                     </div>
-                    
-                    <button type="submit" class="btn-pay" style="margin-top: 24px; width: 100%; padding: 14px; font-size: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Pay ₺{{ booking.total_price }}</button>
-                </form>
-
-                <script>
-                    function toggleCCFields(show) {
-                        const form = document.getElementById('new-card-form');
-                        const inputs = form.querySelectorAll('input');
-                        form.style.display = show ? 'block' : 'none';
-                        inputs.forEach(input => {
-                            if (input.type !== 'checkbox') {
-                                input.required = show;
-                            }
-                        });
-                    }
-                    // Initialize
-                    toggleCCFields(true);
-                </script>
-            </form>
-        </div>
-
-        <div class="order-summary card shadow-sm">
-            <h3>Summary</h3>
-            <div class="summary-details">
-                <div class="summary-row">
-                    <span>{{ booking.check_in }} - {{ booking.check_out }}</span>
                 </div>
-                <div class="summary-row highlight">
-                    <span>Total (TRY)</span>
-                    <span>₺{{ booking.total_price }}</span>
+
+                <input type="hidden" name="payment_method" value="credit_card">
+                <input type="hidden" name="amount" value="{{ booking.total_price }}">
+                
+                <button type="submit" class="btn-pay-main">Pay ₺{{ booking.total_price }}</button>
+            </div>
+
+            <div class="order-summary card shadow-sm">
+                <h3>Price Summary</h3>
+                <div class="summary-details">
+                    <div class="summary-row">
+                        <span>Stay Period</span>
+                        <span>{{ booking.check_in }} - {{ booking.check_out }}</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total (TRY)</span>
+                        <span>₺{{ booking.total_price }}</span>
+                    </div>
+                </div>
+                <div class="secure-badge">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>256-bit SSL Secure Payment</span>
                 </div>
             </div>
-            <p class="secure-text"><i class="fa-solid fa-shield-halved"></i> 256-bit SSL Secure Checkout</p>
         </div>
-    </div>
+    </form>
 </div>
 
+<script>
+function toggleNewCard(show) {
+    const fields = document.getElementById('new_card_fields');
+    fields.style.display = show ? 'block' : 'none';
+    
+    // Toggle required fields
+    const inputs = fields.querySelectorAll('input:not([type="checkbox"])');
+    inputs.forEach(input => {
+        input.required = show;
+    });
+}
+</script>
+
 <style>
-    .checkout-container { padding: 3rem 0; max-width: 1000px; margin: 0 auto; }
-    .checkout-header { margin-bottom: 2rem; }
-    .checkout-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
-
-    .card { background: white; padding: 2rem; border-radius: 12px; }
-    .card h3 { margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
-
-    .method-option input { display: none; }
-    .method-box {
-        border: 2px solid #ddd;
-        padding: 1rem;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+    .checkout-container { padding: 48px 0; max-width: 1100px; margin: 0 auto; }
+    .checkout-header { margin-bottom: 32px; }
+    .checkout-header h1 { font-size: 32px; margin-bottom: 8px; }
+    
+    .checkout-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 32px; }
+    
+    .card { background: white; padding: 32px; border-radius: 16px; border: 1px solid #eee; }
+    
+    /* Card Radio Options */
+    .card-option { 
+        display: flex; 
+        align-items: center; 
+        gap: 16px; 
+        padding: 16px; 
+        border: 1px solid #ddd; 
+        border-radius: 12px; 
         cursor: pointer;
-        width: fit-content;
         transition: 0.2s;
     }
-    .method-option input:checked + .method-box { border-color: #ff385c; color: #ff385c; background: #fff8f9; }
+    .card-option:hover { border-color: var(--primary); background: #fffcfc; }
+    .card-option input[type="radio"]:checked + .card-option-content { color: var(--primary); }
+    .card-option input[type="radio"]:checked { accent-color: var(--primary); }
+    
+    .card-option-content { display: flex; flex-direction: column; }
+    .card-holder { font-weight: 700; font-size: 15px; }
+    .card-number { font-size: 13px; color: #717171; }
 
-    .cc-details { margin-top: 1.5rem; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; }
-    .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; }
+    /* Form Fields */
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #222; }
+    .form-group input, .installment-select { 
+        width: 100%; 
+        padding: 12px 16px; 
+        border: 1px solid #ddd; 
+        border-radius: 10px; 
+        font-size: 15px;
+    }
+    .form-group input:focus, .installment-select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(255, 56, 92, 0.1); }
+    
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    
+    .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; color: #444; }
+    
+    .installment-select { background: #f9f9f9; cursor: pointer; font-weight: 600; }
+    .demo-notice { font-size: 12px; color: #999; margin-top: 6px; }
 
-    .btn-pay {
-        background: #ff385c;
+    /* Buttons */
+    .btn-pay-main {
+        width: 100%;
+        padding: 16px;
+        background: var(--primary);
         color: white;
         border: none;
-        width: 100%;
-        padding: 1rem;
-        border-radius: 8px;
-        font-size: 1.1rem;
+        border-radius: 12px;
+        font-size: 18px;
         font-weight: 700;
         cursor: pointer;
-        margin-top: 1rem;
+        margin-top: 32px;
+        transition: 0.2s;
     }
-    .btn-pay:hover { background: #e31c5f; }
+    .btn-pay-main:hover { background: #e31c5f; transform: translateY(-2px); }
 
-    .summary-row { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.95rem; }
-    .summary-row.highlight { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #eee; font-size: 1.2rem; font-weight: 700; }
+    /* Summary */
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; color: #444; }
+    .summary-row.total { 
+        margin-top: 24px; 
+        padding-top: 24px; 
+        border-top: 2px solid #eee; 
+        font-size: 20px; 
+        font-weight: 800; 
+        color: #000;
+    }
+    
+    .secure-badge { 
+        margin-top: 24px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        gap: 8px; 
+        color: #22c55e; 
+        font-size: 13px; 
+        font-weight: 600;
+        background: #f0fdf4;
+        padding: 10px;
+        border-radius: 8px;
+    }
 
-    .secure-text { text-align: center; color: #22c55e; font-size: 0.85rem; margin-top: 1rem; }
-
-    @media (max-width: 768px) { .checkout-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 850px) { .checkout-grid { grid-template-columns: 1fr; } }
 </style>
 {% endblock %}
