@@ -1,42 +1,42 @@
-# HMS Plus — Airbnb Clone | Veritabanı Sistemleri Grup Projesi
+# HMS Plus — Airbnb Clone | Database Systems Group Project
 
-> Airbnb'den ilham alınan, Python Flask + MySQL ile geliştirilmiş full-stack konaklama yönetim sistemi.
-
----
-
-## 🚀 Özellikler
-
-- **Rol Tabanlı Erişim:** Misafir, Ev Sahibi ve Admin panelleri
-- **Tam Rezervasyon Akışı:** Listeleme → Rezervasyon → Ödeme → Yorum
-- **Akıllı Takvim:** Flatpickr ile dolu tarihleri engelleme ve çakışma önleme
-- **Dinamik Fiyatlandırma:** Tarih güncellemesinde otomatik tutar yeniden hesaplama
-- **Admin Paneli:** Kullanıcı, ilan, rezervasyon ve rapor yönetimi
+> A full-stack accommodation management system inspired by Airbnb, developed with Python Flask + MySQL.
 
 ---
 
-## 🗄️ Veritabanı Mimarisi
+## 🚀 Features
 
-Proje **UNF → 1NF → 2NF → 3NF** normalizasyon sürecini eksiksiz uygular.
-
-**10 Tablo:** `Users`, `Properties`, `Amenities`, `PropertyAmenities`, `PropertyPhotos`, `Bookings`, `Payments`, `Reviews`, `UserCards`, `BookingGuests`
-
-📄 Detaylı normalizasyon raporu: [`docs/HMS_Normalization_Report.md`](docs/HMS_Normalization_Report.md)
+- **Role-Based Access Control:** Guest, Host, and Admin panels.
+- **Full Booking Workflow:** Listing → Booking → Payment → Review.
+- **Smart Calendar:** Overlapping date prevention and collision checking using Flatpickr.
+- **Dynamic Pricing:** Automatic total price recalculation when dates are updated.
+- **AI-Powered Reviews:** Sentiment analysis (DistilBERT) and toxicity detection (Toxic-BERT) to filter comments.
+- **Admin Panel:** Management of users, listings, bookings, and interactive SQL analytics reports.
 
 ---
 
-## ⚙️ Kurulum
+## 🗄️ Database Architecture
 
-### 1. Bağımlılıklar
+The project strictly follows the **UNF → 1NF → 2NF → 3NF** normalization process.
+
+**10 Tables:** `Users`, `Properties`, `Amenities`, `PropertyAmenities`, `PropertyPhotos`, `Bookings`, `Payments`, `Reviews`, `UserCards`, `BookingGuests`.
+
+📄 Detailed normalization report: [`docs/HMS_Normalization_Report.md`](docs/HMS_Normalization_Report.md)
+
+---
+
+## ⚙️ Installation & Setup
+
+### 1. Prerequisites
 ```bash
-pip install flask mysql-connector-python werkzeug python-dotenv
+pip install flask mysql-connector-python werkzeug python-dotenv transformers torch tensorflow deep-translator
 ```
 
-### 2. Ortam Değişkenleri
-`.env.example` dosyasını `.env` olarak kopyalayın ve doldurun:
+### 2. Environment Variables
+Copy `.env.example` to `.env` and fill in your local credentials:
 ```bash
 cp .env.example .env
 ```
-
 ```env
 DB_HOST=localhost
 DB_USER=root
@@ -45,105 +45,83 @@ DB_NAME=airbnb_clone
 SECRET_KEY=your_secret_key
 ```
 
-### 3. Veritabanını Oluştur
+### 3. Database Setup (Choose ONE option)
+
+#### Option A: Quick Restore (Recommended for Teammates)
+This will set up the exact same database state including all translated reviews and properties.
+1. Create the database in MySQL: `CREATE DATABASE airbnb_clone;`
+2. Import the final dump:
+```bash
+mysql -u root -p airbnb_clone < database/final_dump.sql
+```
+
+#### Option B: Clean Install
+1. Create the database and tables:
 ```bash
 mysql -u root -p < database/setup_airbnb.sql
 ```
-
-### 4. Örnek Verileri Yükle
+2. Populate data using scripts:
 ```bash
-python scripts/populate_data.py
 python scripts/bulk_populate.py
+python scripts/translate_reviews.py
+python scripts/translate_properties.py
 ```
 
-### 5. Uygulamayı Başlat
+### 4. Run the App
 ```bash
 python app.py
 ```
-Uygulama `http://localhost:5000` adresinde çalışır.
+Visit `http://localhost:5000` in your browser.
 
 ---
 
-## 👤 Demo Hesaplar
+## 👤 Demo Accounts
 
-Tüm hesapların şifresi: **`password123`**
+All passwords are: **`password123`**
 
 ### 🔴 Admin
-| İsim | E-posta |
-|------|---------|
-| System Admin | admin@example.com |
+- **Email:** `admin@example.com`
 
-### 🏠 Ev Sahipleri (Host)
-| İsim | E-posta | İlanları |
-|------|---------|----------|
-| Ahmet Evsahibi | host@example.com | Lüks Villa (İstanbul), Şirin Stüdyo (Antalya), Modern Loft (İstanbul) |
-| Zeynep Hanım | zeynep@example.com | Kapadokya Mağara Evi |
-| Burak Yılmaz | burak@example.com | Alaçatı Taş Butik, Bodrum Sonsuzluk Villas |
-| Can Özdemir | can@host.com | Sarıyer Boğaziçi Konak, Kaş Akdeniz Konağı, Çeşme Rüzgar Evi, Bitez Bahçe Villası, Göreme Balon Suiti, Uzungöl Dağ Evi, Bursa Uludağ Kayak Evi |
-| Deniz Aktug | deniz@host.com | Üsküdar Kozy Apart, Side Antik Süit, Urla Zeytinlik Köşk, Göcek Köyü Evi, Üçhisar Kale Apart, Rize Çay Bahçesi, Eskişehir Porsuk Loft |
-| Fatma Bulut | fatma@host.com | Moda Chic Loft, Olympos Bungalov, Karşıyaka Sahil Apart, Datça Taş Ev |
-| Haluk Erdem | haluk@host.com | Cihangir Sanat Evi |
-| İpek Şahin | ipek@host.com | Bebek Su Üstü Residence |
+### 🏠 Hosts
+| Name | Email | Portfolio Example |
+|------|-------|-------------------|
+| Ahmet Host | host@example.com | Luxury Villa, Charming Studio, Modern Loft |
+| Can Ozdemir | can@host.com | Bosphorus Mansion, Kas Mediterranean Mansion |
 
-### 🧳 Misafirler (Guest)
-| İsim | E-posta |
-|------|---------|
-| Mehmet Misafir | guest@example.com |
-| Selin Arslan | selin@example.com |
-| Emre Demir | emre@example.com |
-| Ayşe Kaya | ayse@example.com |
-| Murat Çelik | murat@guest.com |
-| Filiz Yıldız | filiz@guest.com |
-| Oğuz Çınar | oguz@guest.com |
-| Tuğçe Aydın | tugce@guest.com |
-| Baran Korkmaz | baran@guest.com |
-| Nilay Duman | nilay@guest.com |
+### 🧳 Guests
+- **Email:** `guest@example.com`
+- **Email:** `selin@example.com`
 
 ---
 
-## 📁 Proje Yapısı
+## 📁 Project Structure
 
 ```
 HotelUI/
-├── app.py                    # Flask uygulama — tüm route'lar
-├── .env                      # Ortam değişkenleri (git'e eklenmez)
-├── .env.example              # Şablon
+├── app.py                    # Main Flask application & routes
+├── ai_review.py              # AI Sentiment/Toxicity analysis pipeline
 ├── database/
-│   ├── setup_airbnb.sql      # Veritabanı şema (CREATE TABLE)
-│   └── normalization_journey.sql
+│   ├── setup_airbnb.sql      # Schema definition
+│   └── final_dump.sql        # Full database dump (data included)
 ├── docs/
-│   ├── HMS_Normalization_Report.md   # UNF→3NF normalizasyon raporu
-│   ├── Final_Project_Report.md       # Final proje raporu
-│   └── HMS_UNF_Data_Extended.csv     # UNF örnek veri seti
+│   ├── Final_Project_Report.md
+│   └── HMS_Normalization_Report.md
 ├── scripts/
-│   ├── populate_data.py      # İlk 3 ilana ek veri
-│   └── bulk_populate.py      # 20 ilan toplu veri
-├── static/                   # CSS + fotoğraflar
-└── templates/                # Jinja2 HTML şablonları
+│   ├── bulk_populate.py      # Batch data generation
+│   └── translate_reviews.py  # AI Analysis & Translation tool
+├── static/                   # Styling, images, and brand assets
+└── templates/                # Jinja2 HTML views
 ```
 
 ---
 
-## 📊 Veri İstatistikleri
+## 🛠️ Technology Stack
 
-| Tablo | Kayıt Sayısı |
-|-------|-------------|
-| Kullanıcılar (Users) | 19 |
-| İlanlar (Properties) | 26 |
-| Rezervasyonlar (Bookings) | 53+ |
-| Ödemeler (Payments) | 40+ |
-| Yorumlar (Reviews) | 23+ |
-| Özellikler (Amenities) | 6 |
-
----
-
-## 🛠️ Teknoloji Yığını
-
-| Katman | Teknoloji |
+| Layer | Technology |
 |--------|-----------|
 | Backend | Python 3.12, Flask |
-| Veritabanı | MySQL 8.0 |
+| Database | MySQL 8.0 |
+| AI / ML | Transformers, DistilBERT, Toxic-BERT |
 | Frontend | HTML5, Vanilla CSS, JavaScript |
-| Takvim | Flatpickr |
-| İkonlar | Font Awesome 6 |
-| Şifreleme | Werkzeug (PBKDF2-SHA256) |
+| Components | Flatpickr (Calendar), Chart.js (Analytics) |
+| Security | PBKDF2-SHA256 (Hashing) |
