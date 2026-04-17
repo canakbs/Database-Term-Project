@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}SQL Analytics Raporu - Admin{% endblock %}
+{% block title %}SQL Analytics Report - Admin{% endblock %}
 
 {% block content %}
 <!-- Chart.js -->
@@ -8,9 +8,9 @@
 
 <div class="reports-container">
     <div class="reports-header">
-        <div class="breadcrumb"><a href="{{ url_for('admin_dashboard') }}">Admin</a> / SQL Raporları</div>
-        <h1><i class="fa-solid fa-chart-line"></i> Sistem Analitiği</h1>
-        <p>SQL View'ları, JOIN'ler ve GROUP BY sorguları ile üretilen canlı raporlar.</p>
+        <div class="breadcrumb"><a href="{{ url_for('admin_dashboard') }}">Admin</a> / SQL Reports</div>
+        <h1><i class="fa-solid fa-chart-line"></i> System Analytics</h1>
+        <p>Live reports generated using SQL Views, JOINs, and GROUP BY queries.</p>
     </div>
 
     <!-- ─── CHARTS ROW ─── -->
@@ -51,8 +51,8 @@
     <!-- ─── SECTION 1: AI Review Analysis ─── -->
     <div class="report-section">
         <div class="section-header">
-            <h2><i class="fa-solid fa-robot"></i> AI Yorum Analizi</h2>
-            <p class="section-desc">Tüm yorumlar küfür tespiti (toxic-bert) ve duygu analizi (DistilBERT) ile işlenmiştir.</p>
+            <h2><i class="fa-solid fa-robot"></i> AI Review Analysis</h2>
+            <p class="section-desc">All reviews processed with toxicity detection (toxic-bert) and sentiment analysis (DistilBERT).</p>
         </div>
         <div class="table-wrap">
         <table class="report-table">
