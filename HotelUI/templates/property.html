@@ -246,6 +246,9 @@
                     {% elif review.ai_analysis.sentiment == 'NEGATIVE' %}
                         {% set bg_color = '#fef2f2' %}
                         {% set border_color = '#fecaca' %}
+                    {% elif review.ai_analysis.sentiment == 'NEUTRAL' %}
+                        {% set bg_color = '#fffbeb' %}
+                        {% set border_color = '#fde68a' %}
                     {% endif %}
                 {% endif %}
 
@@ -265,9 +268,12 @@
                     <p style="font-size: 14px;">{{ review.comment }}</p>
                     
                     {% if review.ai_analysis %}
-                        <div style="margin-top: 12px; font-size: 12px; font-weight: 600; color: {{ '#16a34a' if review.ai_analysis.sentiment == 'POSITIVE' else '#dc2626' }};">
+                        <div style="margin-top: 12px; font-size: 12px; font-weight: 600;
+                            color: {{ '#16a34a' if review.ai_analysis.sentiment == 'POSITIVE' else '#d97706' if review.ai_analysis.sentiment == 'NEUTRAL' else '#dc2626' }};">
                             {% if review.ai_analysis.sentiment == 'POSITIVE' %}
                                 <i class="fa-solid fa-face-smile"></i> Positive Review
+                            {% elif review.ai_analysis.sentiment == 'NEUTRAL' %}
+                                <i class="fa-solid fa-face-meh"></i> Neutral Review
                             {% else %}
                                 <i class="fa-solid fa-face-frown"></i> Negative Review
                             {% endif %}

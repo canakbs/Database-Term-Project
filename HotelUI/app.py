@@ -346,8 +346,8 @@ def admin_reports():
     """)
     all_reviews = cur.fetchall()
 
-    # Chart data: sentiment distribution
-    sentiment_counts = {'POSITIVE': 0, 'NEGATIVE': 0, 'NOT_ANALYZED': 0}
+    # Chart data: sentiment distribution (3-class: POSITIVE / NEUTRAL / NEGATIVE)
+    sentiment_counts = {'POSITIVE': 0, 'NEUTRAL': 0, 'NEGATIVE': 0, 'NOT_ANALYZED': 0}
     rating_dist = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
     for rev in all_reviews:
         s = rev.get('ai_sentiment') or 'NOT_ANALYZED'

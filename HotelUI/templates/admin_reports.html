@@ -34,6 +34,7 @@
             <div class="chart-wrap chart-wrap--sm"><canvas id="sentimentChart"></canvas></div>
             <div class="sentiment-legend">
                 <span class="leg-item pos"><i class="fa-solid fa-circle"></i> Positive: {{ sentiment_counts.POSITIVE }}</span>
+                <span class="leg-item neutral"><i class="fa-solid fa-circle"></i> Neutral: {{ sentiment_counts.NEUTRAL }}</span>
                 <span class="leg-item neg"><i class="fa-solid fa-circle"></i> Negative: {{ sentiment_counts.NEGATIVE }}</span>
                 <span class="leg-item neu"><i class="fa-solid fa-circle"></i> Unanalyzed: {{ sentiment_counts.NOT_ANALYZED }}</span>
             </div>
@@ -81,8 +82,10 @@
                             <span class="badge-sentiment pos"><i class="fa-solid fa-face-smile"></i> Positive</span>
                         {% elif rev.ai_sentiment == 'NEGATIVE' %}
                             <span class="badge-sentiment neg"><i class="fa-solid fa-face-frown"></i> Negative</span>
+                        {% elif rev.ai_sentiment == 'NEUTRAL' %}
+                            <span class="badge-sentiment neu"><i class="fa-solid fa-face-meh"></i> Neutral</span>
                         {% else %}
-                            <span class="badge-sentiment neu"><i class="fa-solid fa-minus"></i> —</span>
+                            <span class="badge-sentiment gray"><i class="fa-solid fa-minus"></i> &mdash;</span>
                         {% endif %}
                     </td>
                     <td>
@@ -269,19 +272,20 @@ new Chart(cityCtx, {
     }
 });
 
-// 3. Sentiment Pie
+// 3. Sentiment Pie (3-class)
 const sentCtx = document.getElementById('sentimentChart');
 new Chart(sentCtx, {
     type: 'doughnut',
     data: {
-        labels: ['Positive', 'Negative', 'Unanalyzed'],
+        labels: ['Positive', 'Neutral', 'Negative', 'Unanalyzed'],
         datasets: [{
             data: [
                 {{ sentiment_counts.POSITIVE }},
+                {{ sentiment_counts.NEUTRAL }},
                 {{ sentiment_counts.NEGATIVE }},
                 {{ sentiment_counts.NOT_ANALYZED }}
             ],
-            backgroundColor: [CHART_COLORS.green, CHART_COLORS.primary, CHART_COLORS.gray],
+            backgroundColor: [CHART_COLORS.green, CHART_COLORS.orange, CHART_COLORS.primary, CHART_COLORS.gray],
             borderWidth: 2,
             borderColor: '#fff'
         }]
@@ -353,9 +357,10 @@ new Chart(ratingCtx, {
 
 .sentiment-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 1rem; font-size: 0.8rem; }
 .leg-item { display: flex; align-items: center; gap: 5px; }
-.leg-item.pos i { color: #10b981; }
-.leg-item.neg i { color: #ff385c; }
-.leg-item.neu i { color: #9ca3af; }
+.leg-item.pos     i { color: #10b981; }
+.leg-item.neutral i { color: #f59e0b; }
+.leg-item.neg     i { color: #ff385c; }
+.leg-item.neu     i { color: #9ca3af; }
 
 /* ─── Report Sections ─── */
 .report-section {
@@ -395,9 +400,10 @@ new Chart(ratingCtx, {
     padding: 3px 10px; border-radius: 20px;
     font-size: 0.78rem; font-weight: 600;
 }
-.badge-sentiment.pos { background: #dcfce7; color: #16a34a; }
-.badge-sentiment.neg { background: #fee2e2; color: #dc2626; }
-.badge-sentiment.neu { background: #f3f4f6; color: #6b7280; }
+.badge-sentiment.pos  { background: #dcfce7; color: #16a34a; }
+.badge-sentiment.neg  { background: #fee2e2; color: #dc2626; }
+.badge-sentiment.neu  { background: #fef3c7; color: #d97706; }
+.badge-sentiment.gray { background: #f3f4f6; color: #6b7280; }
 
 .badge-status {
     display: inline-flex; align-items: center; gap: 5px;

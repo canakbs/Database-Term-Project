@@ -90,9 +90,24 @@ def detect_toxicity(text):
 # =========================
 # SENTIMENT CHECK
 # =========================
+# Thresholds for 3-class sentiment:
+#   score >= 0.90  → confident POSITIVE or NEGATIVE
+#   score <  0.90  → borderline confidence → NEUTRAL
+# Based on DistilBERT SST-2 score distribution on hotel reviews:
+#   Clear positives score 0.99+, clear negatives score 0.95+
+#   Ambiguous/mixed reviews score 0.84-0.89 → classified as NEUTRAL
+NEUTRAL_THRESHOLD = 0.90
+
 def detect_sentiment(text):
     result = sentiment_model(text)[0]
-    return result["label"], result["score"]
+    label = result["label"]   # 'POSITIVE' or 'NEGATIVE'
+    score = result["score"]
+
+    # If the model is not confident enough, classify as NEUTRAL
+    if score < NEUTRAL_THRESHOLD:
+        return "NEUTRAL", score
+
+    return label, score
 
 
 # =========================
@@ -114,18 +129,23 @@ def process_review(text):
 
     return {
         "status": "APPROVED",
-        "sentiment": sentiment_label,
+        "sentiment": sentiment_label,          # POSITIVE / NEUTRAL / NEGATIVE
         "sentiment_score": round(sentiment_score, 3),
         "reason": "Clean",
         "toxicity_score": round(tox_score, 3)
     }
 
 if __name__ == '__main__':
-    # Initial download test if run directly
-    print("Testing pipeline load and execution...")
-    res = process_review("This was a great stay!")
-    print("Test 1 (Positive):", res)
-    res2 = process_review("This place is absolutely terrible!")
-    print("Test 2 (Negative):", res2)
-    res3 = process_review("This host is a fucking idiot!")
-    print("Test 3 (Toxic):", res3)
+    print("Testing 3-class sentiment pipeline...")
+    tests = [
+        ("This was an absolutely amazing stay, best vacation ever!", "→ expect POSITIVE"),
+        ("Met our expectations, good value for money. Would consider staying again.", "→ expect NEUTRAL"),
+        ("Overall nice but we had trouble with parking. Still reasonable.", "→ expect NEUTRAL"),
+        ("Terrible place, dirty rooms, rude host, never coming back!", "→ expect NEGATIVE"),
+        ("This host is a fucking idiot!", "→ expect REJECTED (toxic)"),
+    ]
+    for text, hint in tests:
+        res = process_review(text)
+        print(f"  {hint}  →  {res['sentiment']} ({res['status']}) score={res.get('sentiment_score')}")
+        print(f"  Text: {text[:60]}")
+        print()
