@@ -124,14 +124,14 @@
 {% endblock %}
 
 {% block content %}
-<a href="/" class="btn-back"><i class="fa-solid fa-chevron-left"></i> Geri</a>
+<a href="/" class="btn-back"><i class="fa-solid fa-chevron-left"></i> Back</a>
 <div class="property-header">
     <h1>{{ property.title }}</h1>
     <div class="header-sub">
         <div>
-            <i class="fa-solid fa-star"></i> {{ property.avg_rating or 'Yeni' }} 
+            <i class="fa-solid fa-star"></i> {{ property.avg_rating or 'New' }} 
             &nbsp;·&nbsp; 
-            <span>{{ reviews|length }} yorum</span>
+            <span>{{ reviews|length }} reviews</span>
             &nbsp;·&nbsp;
             <span>{{ property.city }}, {{ property.district }}</span>
         </div>
@@ -151,23 +151,23 @@
 <div class="property-main-content">
     <div class="left-col">
         <div class="host-info">
-            <h2>{{ property.host_name }} tarafındanki {{ property.property_type }}</h2>
-            <p>{{ property.max_guests }} misafir · {{ property.bedroom_count }} yatak odası · {{ property.bathroom_count }} banyo</p>
+            <h2>{{ property.property_type }} hosted by {{ property.host_name }}</h2>
+            <p>{{ property.max_guests }} guests · {{ property.bedroom_count }} bedrooms · {{ property.bathroom_count }} baths</p>
         </div>
 
         <ul class="details-list">
             <li>
                 <i class="fa-solid fa-key"></i>
                 <div>
-                    <strong>Mükemmel giriş deneyimi</strong>
-                    <p style="color: var(--text-light); font-size: 14px;">Son misafirlerin %100'ü giriş sürecine 5 yıldız verdi.</p>
+                    <strong>Excellent check-in experience</strong>
+                    <p style="color: var(--text-light); font-size: 14px;">100% of recent guests gave the check-in process a 5-star rating.</p>
                 </div>
             </li>
             <li>
                 <i class="fa-solid fa-location-dot"></i>
                 <div>
-                    <strong>Harika konum</strong>
-                    <p style="color: var(--text-light); font-size: 14px;">Son misafirlerin %95'i buranın konumunu harika buldu.</p>
+                    <strong>Great location</strong>
+                    <p style="color: var(--text-light); font-size: 14px;">95% of recent guests loved the location.</p>
                 </div>
             </li>
         </ul>
@@ -177,7 +177,7 @@
         </div>
 
         <div style="padding: 32px 0;">
-            <h2>Burada sunulan olanaklar</h2>
+            <h2>Amenities offered here</h2>
             <div class="amenities-grid">
                 {% for amenity in amenities %}
                 <div class="amenity-item">
@@ -185,7 +185,7 @@
                     <span>{{ amenity.name }}</span>
                 </div>
                 {% else %}
-                <p>Olanak belirtilmedi.</p>
+                <p>No amenities available.</p>
                 {% endfor %}
             </div>
         </div>
@@ -194,37 +194,37 @@
     <div class="right-col">
         <div class="booking-card">
             <div class="booking-price">
-                <span>₺{{ property.base_price }}</span> gece
+                <span>₺{{ property.base_price }}</span> night
             </div>
             
             <form action="{{ url_for('book_property', id=property.property_id) }}" method="POST">
                 <div class="booking-inputs">
                     <div class="input-group">
                         <div class="sub-input">
-                            <label class="input-label">GİRİŞ</label>
-                            <input type="text" name="check_in" id="check_in" placeholder="Tarih ekleyin" required readonly class="date-field">
+                            <label class="input-label">CHECK-IN</label>
+                            <input type="text" name="check_in" id="check_in" placeholder="Add date" required readonly class="date-field">
                         </div>
                         <div class="sub-input">
-                            <label class="input-label">ÇIKIŞ</label>
-                            <input type="text" name="check_out" id="check_out" placeholder="Tarih ekleyin" required readonly class="date-field">
+                            <label class="input-label">CHECK-OUT</label>
+                            <input type="text" name="check_out" id="check_out" placeholder="Add date" required readonly class="date-field">
                         </div>
                     </div>
                     <div style="padding: 10px;">
-                        <label style="font-size: 10px; font-weight: 800; text-transform: uppercase;">Misafirler</label><br>
+                        <label style="font-size: 10px; font-weight: 800; text-transform: uppercase;">Guests</label><br>
                         <select name="guests" style="width: 100%; border: none; outline: none; background: transparent; font-family: inherit;">
                             {% for i in range(1, property.max_guests + 1) %}
-                            <option value="{{ i }}">{{ i }} misafir</option>
+                            <option value="{{ i }}">{{ i }} guest(s)</option>
                             {% endfor %}
                         </select>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-block" style="border-radius: 8px;">Rezerve edin</button>
+                <button type="submit" class="btn-block" style="border-radius: 8px;">Reserve</button>
             </form>
-            <p style="text-align: center; color: var(--text-light); font-size: 14px; margin-top: 12px;">Henüz sizden tahsilat yapılmayacak</p>
+            <p style="text-align: center; color: var(--text-light); font-size: 14px; margin-top: 12px;">You won't be charged yet</p>
             
             <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-weight: 700; font-size: 18px;">
-                <span>Toplam</span>
+                <span>Total</span>
                 <span id="total_price_display">₺{{ property.base_price }}</span>
             </div>
         </div>
@@ -232,24 +232,51 @@
 </div>
 
 <div style="padding: 48px 0; border-top: 1px solid var(--border); margin-top: 48px;">
-    <h2>Yorumlar</h2>
+    <h2>Reviews</h2>
     <div class="amenities-grid">
         {% for review in reviews %}
-        <div class="card">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <div class="user-avatar" style="width: 40px; height: 40px;">{{ review.guest_name[0] }}</div>
-                <div>
-                    <strong>{{ review.guest_name }}</strong><br>
-                    <span style="font-size: 12px; color: var(--text-light);">{{ review.created_at.strftime('%Y %B') if review.created_at else 'Nisan 2026' }}</span>
+            {% if not review.ai_analysis or review.ai_analysis.status != 'REJECTED' %}
+                
+                {% set bg_color = 'white' %}
+                {% set border_color = 'var(--border)' %}
+                {% if review.ai_analysis %}
+                    {% if review.ai_analysis.sentiment == 'POSITIVE' %}
+                        {% set bg_color = '#f0fdf4' %}
+                        {% set border_color = '#bbf7d0' %}
+                    {% elif review.ai_analysis.sentiment == 'NEGATIVE' %}
+                        {% set bg_color = '#fef2f2' %}
+                        {% set border_color = '#fecaca' %}
+                    {% endif %}
+                {% endif %}
+
+                <div class="card" style="background-color: {{ bg_color }}; border: 1px solid {{ border_color }}; padding: 16px; border-radius: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <div class="user-avatar" style="width: 40px; height: 40px;">{{ review.guest_name[0] }}</div>
+                        <div>
+                            <strong>{{ review.guest_name }}</strong><br>
+                            <span style="font-size: 12px; color: var(--text-light);">{{ review.created_at.strftime('%Y %B') if review.created_at else 'April 2026' }}</span>
+                        </div>
+                    </div>
+                    <div style="color: #ff385c; font-size: 12px; margin-bottom: 8px;">
+                        {% for i in range(review.rating) %}
+                            <i class="fa-solid fa-star"></i>
+                        {% endfor %}
+                    </div>
+                    <p style="font-size: 14px;">{{ review.comment }}</p>
+                    
+                    {% if review.ai_analysis %}
+                        <div style="margin-top: 12px; font-size: 12px; font-weight: 600; color: {{ '#16a34a' if review.ai_analysis.sentiment == 'POSITIVE' else '#dc2626' }};">
+                            {% if review.ai_analysis.sentiment == 'POSITIVE' %}
+                                <i class="fa-solid fa-face-smile"></i> Positive Review
+                            {% else %}
+                                <i class="fa-solid fa-face-frown"></i> Negative Review
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
-            </div>
-            <div style="color: #ff385c; font-size: 12px; margin-bottom: 8px;">
-                {% for i in range(review.rating) %}
-                    <i class="fa-solid fa-star"></i>
-                {% endfor %}
-            </div>
-            <p style="font-size: 14px;">{{ review.comment }}</p>
-        </div>
+            {% endif %}
+        {% else %}
+            <p>No reviews yet.</p>
         {% endfor %}
     </div>
 </div>

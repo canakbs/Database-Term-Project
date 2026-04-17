@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}Gelen Rezervasyonlar - Airbnb Clone{% endblock %}
+{% block title %}Incoming Reservations - Airbnb Clone{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('dashboard') }}" class="btn-back"><i class="fa-solid fa-chevron-left"></i> Panele Dön</a>
+<a href="{{ url_for('dashboard') }}" class="btn-back"><i class="fa-solid fa-chevron-left"></i> Back to Dashboard</a>
 <div style="margin-top: 48px;">
-    <h1>Rezervasyonlar</h1>
-    <h2 style="font-size: 22px; margin-top: 32px; margin-bottom: 24px;">Misafirleriniz</h2>
+    <h1>Incoming Reservations</h1>
+    <h2 style="font-size: 22px; margin-top: 32px; margin-bottom: 24px;">Your Guests</h2>
     
     <div class="table-wrap">
         <table>
             <thead>
                 <tr>
-                    <th>Durum</th>
-                    <th>Misafir</th>
-                    <th>Mülk</th>
-                    <th>Giriş</th>
-                    <th>Çıkış</th>
-                    <th>Kişi</th>
-                    <th>Ücret</th>
-                    <th>Tarih</th>
-                    <th>İşlemler</th>
+                    <th>Status</th>
+                    <th>Guest</th>
+                    <th>Property</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Guests</th>
+                    <th>Total Price</th>
+                    <th>Reservation Date</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -41,14 +41,14 @@
                             {% if res.status == 'pending' %}
                             <form action="{{ url_for('host_update_booking', id=res.booking_id) }}" method="POST">
                                 <input type="hidden" name="status" value="confirmed">
-                                <button type="submit" class="btn-action approve" title="Onayla"><i class="fa-solid fa-check"></i></button>
+                                <button type="submit" class="btn-action approve" title="Approve"><i class="fa-solid fa-check"></i></button>
                             </form>
                             {% endif %}
                             
                             {% if res.status in ['pending', 'confirmed'] %}
-                            <form action="{{ url_for('host_update_booking', id=res.booking_id) }}" method="POST" onsubmit="return confirm('Bu rezervasyonu iptal etmek istediğinize emin misiniz?')">
+                            <form action="{{ url_for('host_update_booking', id=res.booking_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this reservation?')">
                                 <input type="hidden" name="status" value="cancelled">
-                                <button type="submit" class="btn-action reject" title="{{ 'Reddet' if res.status == 'pending' else 'İptal Et' }}"><i class="fa-solid fa-xmark"></i></button>
+                                <button type="submit" class="btn-action reject" title="{{ 'Reject' if res.status == 'pending' else 'Cancel' }}"><i class="fa-solid fa-xmark"></i></button>
                             </form>
                             {% endif %}
                         </div>
@@ -56,7 +56,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 48px; color: var(--text-light);">Henüz rezervasyonunuz bulunmuyor.</td>
+                    <td colspan="9" style="text-align: center; padding: 48px; color: var(--text-light);">You have no incoming reservations yet.</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -1,28 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Giriş Yap - Airbnb Clone{% endblock %}
+{% block title %}Log In - Airbnb Clone{% endblock %}
 
 {% block content %}
 <div class="auth-container">
-    <h2>Giriş yapın veya kaydolun</h2>
+    <h2>Log in or sign up</h2>
     <hr>
     <br>
     <form action="{{ url_for('login') }}" method="POST">
         <div class="form-group">
-            <label for="email">E-posta</label>
-            <input type="email" name="email" id="email" placeholder="E-posta adresiniz" required>
+            <label for="email">Email</label>
+            <input type="email" name="email" id="email" placeholder="Email address" required>
         </div>
 
         <div class="form-group">
-            <label for="password">Şifre</label>
+            <label for="password">Password</label>
             <input type="password" name="password" id="password" placeholder="********" required>
         </div>
 
-        <button type="submit" class="btn-block">Giriş Yap</button>
+        <button type="submit" class="btn-block">Log In</button>
     </form>
 
     <div class="demo-credentials">
-        <h4>Demo Bilgileri</h4>
+        <h4>Demo Credentials</h4>
         <p><strong>Admin:</strong> admin@example.com / password123</p>
         <p><strong>Host:</strong> host@example.com / password123</p>
         <p><strong>Guest:</strong> guest@example.com / password123</p>

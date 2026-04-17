@@ -1,99 +1,85 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Paneli - Airbnb Clone{% endblock %}
+{% block title %}Admin Panel - Airbnb Clone{% endblock %}
 
 {% block content %}
 <div class="admin-container">
     <div class="admin-header">
-        <h1>Sistem Özeti</h1>
-        <p>Platformun genel durumunu buradan takip edebilirsiniz.</p>
+        <h1>System Overview</h1>
+        <p>You can track the general status of the platform here.</p>
     </div>
 
     <div class="admin-stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon users"><i class="fa-solid fa-users"></i></div>
-            <div class="stat-info">
-                <h3>Toplam Kullanıcı</h3>
-                <p class="stat-value">{{ stats.total_users }}</p>
-                <a href="{{ url_for('admin_users') }}" class="stat-link">Yönet <i class="fa-solid fa-arrow-right"></i></a>
-            </div>
+        <div class="card" style="border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: center;">
+            <i class="fa-solid fa-users" style="font-size: 32px; color: var(--primary); margin-bottom: 12px;"></i>
+            <h2>{{ stats.total_users }}</h2>
+            <p style="color: var(--text-light);">Users</p>
+        </div>
+        
+        <div class="card" style="border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: center;">
+            <i class="fa-solid fa-house" style="font-size: 32px; color: #0ea5e9; margin-bottom: 12px;"></i>
+            <h2>{{ stats.total_properties }}</h2>
+            <p style="color: var(--text-light);">Active Listings</p>
         </div>
 
-        <div class="stat-card">
-            <div class="stat-icon properties"><i class="fa-solid fa-house"></i></div>
-            <div class="stat-info">
-                <h3>Toplam İlan</h3>
-                <p class="stat-value">{{ stats.total_properties }}</p>
-                <a href="{{ url_for('admin_properties') }}" class="stat-link">Yönet <i class="fa-solid fa-arrow-right"></i></a>
-            </div>
+        <div class="card" style="border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: center;">
+            <i class="fa-solid fa-calendar-check" style="font-size: 32px; color: #10b981; margin-bottom: 12px;"></i>
+            <h2>{{ stats.total_bookings }}</h2>
+            <p style="color: var(--text-light);">Confirmed Bookings</p>
         </div>
 
-        <div class="stat-card">
-            <div class="stat-icon bookings"><i class="fa-solid fa-calendar-check"></i></div>
-            <div class="stat-info">
-                <h3>Toplam Rezervasyon</h3>
-                <p class="stat-value">{{ stats.total_bookings }}</p>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-icon revenue"><i class="fa-solid fa-lira-sign"></i></div>
-            <div class="stat-info">
-                <h3>Toplam Kazanç</h3>
-                <p class="stat-value">{{ "{:,.2f}".format(stats.total_revenue) }} ₺</p>
-            </div>
+        <div class="card" style="border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: center;">
+            <i class="fa-solid fa-wallet" style="font-size: 32px; color: #8b5cf6; margin-bottom: 12px;"></i>
+            <h2>₺{{ stats.total_revenue|round|int }}</h2>
+            <p style="color: var(--text-light);">Total Revenue</p>
         </div>
 
         <div class="stat-card">
             <div class="stat-icon amenities"><i class="fa-solid fa-list-ul"></i></div>
             <div class="stat-info">
-                <h3>Özellikler</h3>
-                <p class="stat-value">Ekle/Sil</p>
-                <a href="{{ url_for('admin_amenities') }}" class="stat-link">Yönet <i class="fa-solid fa-arrow-right"></i></a>
+                <h3>Amenities</h3>
+                <p class="stat-value">Add/Delete</p>
+                <a href="{{ url_for('admin_amenities') }}" class="stat-link">Manage <i class="fa-solid fa-arrow-right"></i></a>
             </div>
         </div>
 
         <div class="stat-card" style="background: #fdf2f8;">
             <div class="stat-icon" style="background: #fce7f3; color: #db2777;"><i class="fa-solid fa-chart-line"></i></div>
             <div class="stat-info">
-                <h3>SQL Raporları</h3>
-                <p class="stat-value">Analizler</p>
-                <a href="{{ url_for('admin_reports') }}" class="stat-link">Görüntüle <i class="fa-solid fa-arrow-right"></i></a>
+                <h3>SQL Reports</h3>
+                <p class="stat-value">Analytics</p>
+                <a href="{{ url_for('admin_reports') }}" class="stat-link">View <i class="fa-solid fa-arrow-right"></i></a>
             </div>
         </div>
     </div>
 
-    <div class="admin-section">
-        <div class="section-header">
-            <h2>Son Rezervasyonlar</h2>
-        </div>
-        
-        <div class="table-container shadow-sm">
+    <div style="margin-top: 48px;">
+        <h2>Recent Bookings</h2>
+        <div class="table-wrap">
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Mülk</th>
-                        <th>Misafir</th>
-                        <th>Giriş - Çıkış</th>
-                        <th>Tutar</th>
-                        <th>Durum</th>
+                        <th>Guest</th>
+                        <th>Property</th>
+                        <th>Dates</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for booking in recent_bookings %}
+                    {% for b in bookings %}
                     <tr>
-                        <td>#{{ booking.booking_id }}</td>
-                        <td>{{ booking.title }}</td>
-                        <td>{{ booking.guest_name }}</td>
-                        <td>{{ booking.check_in }} / {{ booking.check_out }}</td>
-                        <td>{{ booking.total_price }} ₺</td>
+                        <td>{{ b.guest_name }}</td>
+                        <td>{{ b.property_title }}</td>
+                        <td><span style="font-size: 13px;">{{ b.check_in.strftime('%m/%Y') }} - {{ b.check_out.strftime('%m/%Y') }}</span></td>
                         <td>
-                            <span class="badge badge-{{ booking.status }}">
-                                {{ booking.status|capitalize }}
+                            <span class="badge" style="background: {{ '#e6f4ea' if b.status=='completed' else '#fef7e0' if b.status=='pending' else '#e8f0fe' if b.status=='confirmed' else '#fce8e6' }}; 
+                                   color: {{ '#137333' if b.status=='completed' else '#b06000' if b.status=='pending' else '#1967d2' if b.status=='confirmed' else '#c5221f' }};">
+                                {{ b.status|capitalize }}
                             </span>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-light);">No bookings found.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

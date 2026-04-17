@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}İlan Yönetimi - Admin{% endblock %}
+{% block title %}Listing Management - Admin{% endblock %}
 
 {% block content %}
 <div class="admin-container">
     <div class="admin-header">
         <div class="breadcrumb">
-            <a href="{{ url_for('admin_dashboard') }}">Admin</a> / İlanlar
+            <a href="{{ url_for('admin_dashboard') }}">Admin</a> / Listings
         </div>
-        <h1>İlan Yönetimi</h1>
+        <h1>Listing Management</h1>
     </div>
 
     <div class="table-container shadow-sm">
@@ -16,12 +16,12 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Başlık</th>
-                    <th>Ev Sahibi</th>
-                    <th>Konum</th>
-                    <th>Fiyat</th>
-                    <th>Durum</th>
-                    <th>İşlem</th>
+                    <th>Title</th>
+                    <th>Host</th>
+                    <th>Location</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -39,16 +39,16 @@
                     <td>
                         <form action="{{ url_for('admin_update_property', id=prop.property_id) }}" method="POST" class="inline-form">
                             <select name="status" onchange="this.form.submit()" class="admin-select">
-                                <option value="active" {% if prop.status == 'active' %}selected{% endif %}>Aktif</option>
-                                <option value="inactive" {% if prop.status == 'inactive' %}selected{% endif %}>Pasif</option>
-                                <option value="maintenance" {% if prop.status == 'maintenance' %}selected{% endif %}>Bakımda</option>
+                                <option value="active" {% if prop.status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if prop.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                <option value="maintenance" {% if prop.status == 'maintenance' %}selected{% endif %}>Maintenance</option>
                             </select>
                         </form>
                     </td>
                     <td>
                         <div style="display: flex; gap: 12px; align-items: center;">
-                            <form action="{{ url_for('admin_delete_property', id=prop.property_id) }}" method="POST" onsubmit="return confirm('Bu ilanı kalıcı olarak silmek istediğinize emin misiniz?')" style="margin: 0;">
-                                <button type="submit" class="btn-icon delete" style="border: none; background: none; cursor: pointer; padding: 0;" title="Sil">
+                            <form action="{{ url_for('admin_delete_property', id=prop.property_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this listing?')" style="margin: 0;">
+                                <button type="submit" class="btn-icon delete" style="border: none; background: none; cursor: pointer; padding: 0;" title="Delete">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </form>

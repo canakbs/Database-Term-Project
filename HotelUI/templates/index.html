@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Airbnb Clone | Tatil Evleri ve Konaklama Yerleri{% endblock %}
+{% block title %}Airbnb Clone | Holiday Homes & Accommodation{% endblock %}
 
 {% block content %}
 <div class="search-section" style="margin-bottom: 40px;">
     <form action="/" method="GET" style="display: flex; gap: 8px; max-width: 600px; margin: 0 auto; background: white; padding: 8px; border-radius: 40px; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-        <input type="text" name="q" placeholder="Nereye gitmek istersiniz?" value="{{ search_query }}" style="flex: 1; border: none; padding: 0 24px; outline: none; font-size: 16px; border-radius: 40px;">
+        <input type="text" name="q" placeholder="Where do you want to go?" value="{{ search_query }}" style="flex: 1; border: none; padding: 0 24px; outline: none; font-size: 16px; border-radius: 40px;">
         <button type="submit" style="background: #ff385c; color: white; border: none; padding: 12px 24px; border-radius: 40px; cursor: pointer; font-weight: 600;">
-            <i class="fa-solid fa-magnifying-glass"></i> Ara
+            <i class="fa-solid fa-magnifying-glass"></i> Search
         </button>
     </form>
 
     <div class="city-filters" style="display: flex; gap: 12px; margin-top: 24px; justify-content: center; flex-wrap: wrap;">
-        <a href="/" class="filter-chip {{ 'active' if not request.args.get('city') }}" style="padding: 8px 20px; border-radius: 20px; border: 1px solid #ddd; text-decoration: none; color: #333; font-size: 14px; font-weight: 600; transition: 0.2s;">Hepsi</a>
+        <a href="/" class="filter-chip {{ 'active' if not request.args.get('city') }}" style="padding: 8px 20px; border-radius: 20px; border: 1px solid #ddd; text-decoration: none; color: #333; font-size: 14px; font-weight: 600; transition: 0.2s;">All</a>
         {% for city in cities %}
         <a href="/?city={{ city }}" class="filter-chip {{ 'active' if request.args.get('city') == city }}" style="padding: 8px 20px; border-radius: 20px; border: 1px solid #ddd; text-decoration: none; color: #333; font-size: 14px; font-weight: 600; transition: 0.2s; background: {{ '#222' if request.args.get('city') == city else 'white' }}; color: {{ 'white' if request.args.get('city') == city else '#333' }};">{{ city }}</a>
         {% endfor %}
@@ -34,17 +34,17 @@
                 <h3 style="font-size: 15px; font-weight: 700; color: #222;">{{ property.title }}</h3>
                 <div class="rating">
                     <i class="fa-solid fa-star"></i>
-                    <span>{{ "{:.1f}".format(property.avg_rating) if property.avg_rating else 'Yeni' }}</span>
+                    <span>{{ "{:.1f}".format(property.avg_rating) if property.avg_rating else 'New' }}</span>
                 </div>
             </div>
             <p class="property-loc">{{ property.city }}, {{ property.district }}</p>
             <p class="property-price">
-                <span class="price-val">₺{{ property.base_price }}</span> gece
+                <span class="price-val">₺{{ property.base_price }}</span> night
             </p>
         </div>
     </a>
     {% else %}
-    <p>Hiç ilan bulunamadı.</p>
+    <p>No listings found.</p>
     {% endfor %}
 </div>
 {% endblock %}

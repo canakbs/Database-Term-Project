@@ -8,10 +8,17 @@ from werkzeug.security import check_password_hash
 from datetime import datetime
 import random
 
+import random
+from ai_review import process_review
+
 # Setup
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'airbnb_clone_secret_key')
+
+# In-memory store for AI review sentiment and toxicity
+# Maps booking_id -> AI analysis dict
+app.config['review_sentiments'] = {}
 
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'localhost'),
@@ -20,7 +27,8 @@ DB_CONFIG = {
     'database': os.getenv('DB_NAME', 'airbnb_clone'), # Switched to new DB
     'charset': 'utf8mb4',
     'collation': 'utf8mb4_general_ci',
-    'use_unicode': True
+    'use_unicode': True,
+    'use_pure': True
 }
 
 def get_db():
@@ -38,7 +46,7 @@ def login_required(role=None):
                 return f(*args, **kwargs)
             # Check specific role
             if role and session['role'] != role:
-                flash(f'Buraya erişmek için {role} yetkisi gerekiyor.', 'error')
+                flash(f'You need {role} permission to access this area.', 'error')
                 return redirect(url_for('index'))
             return f(*args, **kwargs)
         return decorated_function
@@ -97,17 +105,17 @@ def login():
             session['user_id'] = user['user_id']
             session['user_name'] = user['full_name']
             session['role'] = user['role']
-            flash(f'Hoş geldiniz, {user["full_name"]}!', 'success')
+            flash(f'Welcome back, {user["full_name"]}!', 'success')
             return redirect(url_for('index'))
         else:
-            flash('Geçersiz e-posta veya şifre.', 'error')
+            flash('Invalid email or password.', 'error')
             
     return render_template('login.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('Başarıyla çıkış yaptınız.', 'success')
+    flash('You have successfully logged out.', 'success')
     return redirect(url_for('index'))
 
 @app.route('/dashboard')
@@ -205,7 +213,7 @@ def admin_update_user(id):
     db.commit()
     cur.close()
     db.close()
-    flash('Kullanıcı bilgileri güncellendi.', 'success')
+    flash('User information updated.', 'success')
     return redirect(url_for('admin_users'))
 
 @app.route('/admin/delete-user/<int:id>', methods=['POST'])
@@ -215,11 +223,11 @@ def admin_delete_user(id):
     cur = db.cursor()
     # Prevent admin from deleting themselves
     if id == session['user_id']:
-        flash('Kendi hesabınızı silemezsiniz!', 'error')
+        flash('You cannot delete your own account!', 'error')
     else:
         cur.execute("DELETE FROM Users WHERE user_id = %s", (id,))
         db.commit()
-        flash('Kullanıcı başarıyla silindi.', 'success')
+        flash('User successfully deleted.', 'success')
     cur.close()
     db.close()
     return redirect(url_for('admin_users'))
@@ -251,7 +259,7 @@ def admin_amenities():
         icon = request.form.get('icon')
         cur.execute("INSERT INTO Amenities (name, icon) VALUES (%s, %s)", (name, icon))
         db.commit()
-        flash('Yeni özellik eklendi.', 'success')
+        flash('New amenity added.', 'success')
         
     cur.execute("SELECT * FROM Amenities ORDER BY name")
     amenities = cur.fetchall()
@@ -268,7 +276,7 @@ def delete_amenity(id):
     db.commit()
     cur.close()
     db.close()
-    flash('Özellik silindi.', 'success')
+    flash('Amenity deleted.', 'success')
     return redirect(url_for('admin_amenities'))
 
 @app.route('/admin/update-property/<int:id>', methods=['POST'])
@@ -282,7 +290,7 @@ def admin_update_property(id):
     db.commit()
     cur.close()
     db.close()
-    flash('İlan durumu güncellendi.', 'success')
+    flash('Property status updated.', 'success')
     return redirect(url_for('admin_properties'))
 
 @app.route('/admin/delete-property/<int:id>', methods=['POST'])
@@ -294,7 +302,7 @@ def admin_delete_property(id):
     db.commit()
     cur.close()
     db.close()
-    flash('İlan kalıcı olarak silindi.', 'success')
+    flash('Property permanently deleted.', 'success')
     return redirect(url_for('admin_properties'))
 
 @app.route('/admin/reports')
@@ -325,6 +333,28 @@ def admin_reports():
         cur.execute("SELECT * FROM HMS_MonthlyGuestTracker LIMIT 20")
     guest_tracker = cur.fetchall()
     
+    cur.execute("""
+        SELECT r.*, u.full_name as guest_name, p.title as property_title
+        FROM Reviews r
+        JOIN Bookings b ON r.booking_id = b.booking_id
+        JOIN Users u ON b.guest_id = u.user_id
+        JOIN Properties p ON b.property_id = p.property_id
+        ORDER BY r.created_at DESC
+        LIMIT 50
+    """)
+    all_reviews = cur.fetchall()
+    
+    # Attach AI analysis from session cache
+    ai_cache = app.config.get('review_sentiments', {})
+    for rev in all_reviews:
+        bid = str(rev['booking_id'])
+        if bid in ai_cache:
+            rev['ai_sentiment'] = ai_cache[bid]['sentiment']
+            rev['ai_status'] = ai_cache[bid]['status']
+        else:
+            rev['ai_sentiment'] = 'NOT_ANALYZED'
+            rev['ai_status'] = 'ACCEPTED' # Assuming old reviews without analysis are accepted
+            
     cur.close()
     db.close()
     return render_template('admin_reports.html', 
@@ -332,7 +362,8 @@ def admin_reports():
         cities=cities, 
         hosts=hosts,
         booking_summary=booking_summary,
-        guest_tracker=guest_tracker
+        guest_tracker=guest_tracker,
+        ai_reviews=all_reviews
     )
 @app.route('/property/<int:id>')
 def property_detail(id):
@@ -350,7 +381,7 @@ def property_detail(id):
     prop = cur.fetchone()
     
     if not prop:
-        flash('Mülk bulunamadı.', 'error')
+        flash('Property not found.', 'error')
         return redirect(url_for('index'))
     
     # Photos
@@ -373,6 +404,12 @@ def property_detail(id):
         WHERE r.property_id = %s
     """, (id,))
     reviews = cur.fetchall()
+    
+    for review in reviews:
+        if review['booking_id'] in app.config['review_sentiments']:
+            review['ai_analysis'] = app.config['review_sentiments'][review['booking_id']]
+        else:
+            review['ai_analysis'] = None
     
     # Fetch Booked Dates to disable them in UI
     cur.execute("""
@@ -401,7 +438,7 @@ def book_property(id):
     prop = cur.fetchone()
     
     if prop['host_id'] == session['user_id']:
-        flash('Kendi ilanınıza rezervasyon yapamazsınız.', 'error')
+        flash('You cannot book your own property.', 'error')
         return redirect(url_for('property_detail', id=id))
     
     try:
@@ -409,12 +446,12 @@ def book_property(id):
         d2 = datetime.strptime(check_out, '%Y-%m-%d')
         
         if d1.date() < datetime.now().date():
-            flash('Geçmiş bir tarihe rezervasyon yapılamaz.', 'error')
+            flash('Cannot book a past date.', 'error')
             return redirect(url_for('property_detail', id=id))
             
         nights = (d2 - d1).days
         if nights <= 0:
-            flash('Çıkış tarihi giriş tarihinden sonra olmalıdır.', 'error')
+            flash('Check-out date must be after check-in date.', 'error')
             return redirect(url_for('property_detail', id=id))
             
         # ─── OVERLAP CHECK ───
@@ -425,7 +462,7 @@ def book_property(id):
               AND NOT (%s >= check_out OR %s <= check_in)
         """, (id, check_in, check_out))
         if cur.fetchone()['c'] > 0:
-            flash('Bu tarihler arasında mülk çoktan onaylanmış başka bir rezervasyon ile dolu. Lütfen başka tarih seçin.', 'error')
+            flash('The property is already booked for these dates. Please choose different dates.', 'error')
             return redirect(url_for('property_detail', id=id))
             
         total_price = float(prop['base_price'] * nights)
@@ -435,9 +472,9 @@ def book_property(id):
             VALUES (%s, %s, %s, %s, %s, %s, 'pending')
         """, (id, session['user_id'], check_in, check_out, guests, total_price))
         db.commit()
-        flash('Rezervasyonunuz başarıyla oluşturuldu!', 'success')
+        flash('Booking successfully created!', 'success')
     except Exception as e:
-        flash(f'Bir hata oluştu: {e}', 'error')
+        flash(f'An error occurred: {e}', 'error')
         
     cur.close()
     db.close()
@@ -515,7 +552,7 @@ def checkout(booking_id):
         # Actually it's already confirmed if host approved.
         
         db.commit()
-        flash('Ödemeniz başarıyla alındı!', 'success')
+        flash('Payment received successfully!', 'success')
         return redirect(url_for('my_bookings'))
 
     cur.execute("""
@@ -533,7 +570,7 @@ def checkout(booking_id):
     db.close()
     
     if not booking:
-        flash('Rezervasyon bulunamadı.', 'error')
+        flash('Booking not found.', 'error')
         return redirect(url_for('my_bookings'))
         
     return render_template('checkout.html', booking=booking, saved_cards=saved_cards)
@@ -556,7 +593,7 @@ def update_booking(id):
     booking = cur.fetchone()
     
     if booking and booking['payment_status'] == 'completed':
-        flash('Ödemesi tamamlanmış rezervasyonlar güncellenemez.', 'error')
+        flash('Completed reservations cannot be updated.', 'error')
         cur.close()
         db.close()
         return redirect(url_for('my_bookings'))
@@ -575,7 +612,7 @@ def update_booking(id):
     nights = (d2 - d1).days
     
     if nights <= 0:
-        flash('Çıkış tarihi giriş tarihinden sonra olmalıdır.', 'error')
+        flash('Check-out date must be after check-in date.', 'error')
         cur.close()
         db.close()
         return redirect(url_for('my_bookings'))
@@ -590,7 +627,7 @@ def update_booking(id):
     db.commit()
     cur.close()
     db.close()
-    flash('Rezervasyon tarihleriniz ve tutar güncellendi.', 'success')
+    flash('Your booking dates and total amount have been updated.', 'success')
     return redirect(url_for('my_bookings'))
 
 @app.route('/manage-booking-guests/<int:id>', methods=['GET', 'POST'])
@@ -605,11 +642,11 @@ def manage_booking_guests(id):
     booking = cur.fetchone()
     
     if not booking:
-        flash('Rezervasyon bulunamadı.', 'error')
+        flash('Booking not found.', 'error')
         return redirect(url_for('my_bookings'))
         
     if booking['status'] in ['completed', 'cancelled']:
-        flash('Tamamlanmış veya iptal edilmiş rezervasyonlar için misafir bilgisi düzenlenemez.', 'warning')
+        flash('Guest information cannot be edited for completed or cancelled bookings.', 'warning')
         return redirect(url_for('my_bookings'))
 
     if request.method == 'POST':
@@ -620,7 +657,7 @@ def manage_booking_guests(id):
         cur.execute("INSERT INTO BookingGuests (booking_id, full_name, relationship, age) VALUES (%s, %s, %s, %s)",
                    (id, full_name, rel, age))
         db.commit()
-        flash('Misafir bilgisi eklendi.', 'success')
+        flash('Guest information added.', 'success')
         
     cur.execute("SELECT * FROM BookingGuests WHERE booking_id = %s", (id,))
     guests = cur.fetchall()
@@ -642,7 +679,7 @@ def cancel_booking(id):
     db.commit()
     cur.close()
     db.close()
-    flash('Rezervasyonunuz iptal edildi ve varsa ödemeniz iade edildi.', 'success')
+    flash('Your booking has been cancelled and any payment refunded.', 'success')
     return redirect(url_for('my_bookings'))
 
 @app.route('/delete-booking/<int:id>', methods=['POST'])
@@ -655,7 +692,7 @@ def delete_booking(id):
     db.commit()
     cur.close()
     db.close()
-    flash('Rezervasyon geçmişinizden silindi.', 'success')
+    flash('Booking removed from your history.', 'success')
     return redirect(url_for('my_bookings'))
 
 @app.route('/submit-review/<int:booking_id>', methods=['POST'])
@@ -672,6 +709,9 @@ def submit_review(booking_id):
     booking = cur.fetchone()
     
     if booking:
+        ai_result = process_review(comment)
+        app.config['review_sentiments'][booking_id] = ai_result
+        
         # Use INSERT ... ON DUPLICATE KEY UPDATE since booking_id is UNIQUE
         cur.execute("""
             INSERT INTO Reviews (booking_id, guest_id, property_id, rating, comment)
@@ -679,8 +719,12 @@ def submit_review(booking_id):
             ON DUPLICATE KEY UPDATE rating = VALUES(rating), comment = VALUES(comment)
         """, (booking_id, session['user_id'], booking['property_id'], rating, comment))
         db.commit()
-        flash('Değerlendirmeniz güncellendi!', 'success')
-    
+        
+        if ai_result['status'] == 'REJECTED':
+            flash('Your review contained offensive language and was rejected.', 'error')
+        else:
+            flash(f'Review updated! Sentiment detected: {ai_result["sentiment"]}.', 'success')
+        
     cur.close()
     db.close()
     return redirect(url_for('my_bookings'))
@@ -724,8 +768,8 @@ def host_update_booking(id):
     cur.close()
     db.close()
     
-    status_text = "onaylandı" if new_status == 'confirmed' else "reddedildi/iptal edildi"
-    flash(f'Rezervasyon başarıyla {status_text}.', 'success')
+    status_text = "approved" if new_status == 'confirmed' else "rejected/cancelled"
+    flash(f'Booking successfully {status_text}.', 'success')
     return redirect(url_for('host_reservations'))
 
 @app.route('/host-properties')
@@ -779,7 +823,7 @@ def add_property():
         db.commit()
         cur.close()
         db.close()
-        flash('İlanınız başarıyla oluşturuldu!', 'success')
+        flash('Your listing has been successfully created!', 'success')
         return redirect(url_for('host_properties'))
         
     cur.close()
@@ -813,7 +857,7 @@ def edit_property(id):
             cur.execute("INSERT INTO PropertyAmenities (property_id, amenity_id) VALUES (%s, %s)", (id, am_id))
             
         db.commit()
-        flash('İlan ve özellikler başarıyla güncellendi.', 'success')
+        flash('Listing and amenities successfully updated.', 'success')
         return redirect(url_for('host_properties'))
         
     # GET: Fetch property, all amenities, and current amenities
@@ -823,7 +867,7 @@ def edit_property(id):
     if not prop:
         cur.close()
         db.close()
-        flash('İlan bulunamadı.', 'error')
+        flash('Listing not found.', 'error')
         return redirect(url_for('host_properties'))
         
     cur.execute("SELECT * FROM Amenities ORDER BY name")
@@ -852,7 +896,7 @@ def manage_cards():
             cur.execute("INSERT INTO UserCards (user_id, card_holder, card_number_masked, expiry_date) VALUES (%s, %s, %s, %s)", 
                        (session['user_id'], card_holder, masked, expiry))
             db.commit()
-            flash('Yeni ödeme yöntemi eklendi.', 'success')
+            flash('New payment method added.', 'success')
             return redirect(url_for('manage_cards'))
             
     cur.execute("SELECT * FROM UserCards WHERE user_id = %s", (session['user_id'],))
@@ -870,7 +914,7 @@ def delete_card(id):
     db.commit()
     cur.close()
     db.close()
-    flash('Ödeme yöntemi silindi.', 'success')
+    flash('Payment method deleted.', 'success')
     return redirect(url_for('manage_cards'))
 
 if __name__ == '__main__':

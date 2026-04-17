@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}İlanlarım - Airbnb Clone{% endblock %}
+{% block title %}My Listings - Airbnb Clone{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('dashboard') }}" class="btn-back"><i class="fa-solid fa-chevron-left"></i> Panele Dön</a>
+<a href="{{ url_for('dashboard') }}" class="btn-back"><i class="fa-solid fa-chevron-left"></i> Back to Dashboard</a>
 
 <div style="margin-top: 48px; display: flex; justify-content: space-between; align-items: center;">
     <div>
-        <h1>İlanlarım</h1>
-        <h2 style="font-size: 22px; margin-top: 12px; margin-bottom: 24px;">Kirada Olan Evleriniz</h2>
+        <h1>My Listings</h1>
+        <h2 style="font-size: 22px; margin-top: 12px; margin-bottom: 24px;">Your Rental Properties</h2>
     </div>
     <a href="{{ url_for('add_property') }}" class="btn-block" style="width: auto; padding: 12px 24px; text-decoration: none;">
-        <i class="fa-solid fa-plus"></i> Yeni İlan Ekle
+        <i class="fa-solid fa-plus"></i> Add New Listing
     </a>
 </div>
 
@@ -28,22 +29,22 @@
             <p style="color: var(--text-light); margin-bottom: 16px;">{{ property.city }}, {{ property.district }}</p>
             
             <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 24px;">
-                <span><strong>Fiyat:</strong> ₺{{ property.base_price }}/gece</span>
-                <span><strong>Rezervasyon:</strong> {{ property.total_bookings }}</span>
+                <span><strong>Price:</strong> ₺{{ property.base_price }}/night</span>
+                <span><strong>Bookings:</strong> {{ property.total_bookings }}</span>
             </div>
             
             <div style="display: flex; gap: 12px;">
-                <a href="{{ url_for('property_detail', id=property.property_id) }}" class="host-link" style="border: 1px solid var(--border); padding: 8px 16px; text-align: center; flex: 1;">Görüntüle</a>
-                <a href="{{ url_for('edit_property', id=property.property_id) }}" class="host-link" style="border: 1px solid var(--border); padding: 8px 16px; text-align: center; flex: 1; text-decoration: none;">Düzenle</a>
+                <a href="{{ url_for('property_detail', id=property.property_id) }}" class="host-link" style="border: 1px solid var(--border); padding: 8px 16px; text-align: center; flex: 1;">View</a>
+                <a href="{{ url_for('edit_property', id=property.property_id) }}" class="host-link" style="border: 1px solid var(--border); padding: 8px 16px; text-align: center; flex: 1; text-decoration: none;">Edit</a>
             </div>
         </div>
     </div>
     {% else %}
     <div style="padding: 48px; border: 1px solid var(--border); border-radius: 12px; text-align: center; grid-column: 1 / -1;">
         <i class="fa-solid fa-house" style="font-size: 48px; color: var(--border); margin-bottom: 16px;"></i>
-        <h3>Hiç ilanınız yok.</h3>
-        <p style="color: var(--text-light); margin-top: 8px; margin-bottom: 24px;">Evinizi kaydederek misafir ağırlamaya başlayın.</p>
-        <a href="{{ url_for('add_property') }}" class="btn-block" style="display: inline-block; width: auto; padding: 12px 24px; text-decoration: none;">Yeni İlan Oluştur</a>
+        <h3>You don't have any listings yet.</h3>
+        <p style="color: var(--text-light); margin-top: 8px; margin-bottom: 24px;">Start hosting by registering your property.</p>
+        <a href="{{ url_for('add_property') }}" class="btn-block" style="display: inline-block; width: auto; padding: 12px 24px; text-decoration: none;">Create New Listing</a>
     </div>
     {% endfor %}
 </div>

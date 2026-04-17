@@ -1,28 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Sistem Raporları - Admin{% endblock %}
+{% block title %}System Reports - Admin{% endblock %}
 
 {% block content %}
 <div class="admin-container">
     <div class="admin-header">
         <div class="breadcrumb">
-            <a href="{{ url_for('admin_dashboard') }}">Admin</a> / Raporlar
+            <a href="{{ url_for('admin_dashboard') }}">Admin</a> / Reports
         </div>
-        <h1>Sistem Raporları (SQL Analizleri)</h1>
-        <p>Hocanın istediği karmaşık sorgular ve View'lar üzerinden üretilen raporlar.</p>
+        <h1>System Reports (SQL Analytics)</h1>
+        <p>Reports generated via complex queries and Views.</p>
     </div>
 
     <!-- Section 1: Property Analytics -->
     <div class="report-section card shadow-sm" style="margin-bottom: 32px; padding: 24px; background: white; border-radius: 12px;">
-        <h2 style="margin-bottom: 16px; color: var(--primary);"><i class="fa-solid fa-chart-simple"></i> Mülk Analitiği (Join + Group By)</h2>
+        <h2 style="margin-bottom: 16px; color: var(--primary);"><i class="fa-solid fa-chart-simple"></i> Property Analytics (Join + Group By)</h2>
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th>Mülk Başlığı</th>
-                    <th>Şehir</th>
-                    <th>Yorum Sayısı</th>
-                    <th>Ort. Puan</th>
-                    <th>Tamamlanan Konaklama</th>
+                    <th>Property Title</th>
+                    <th>City</th>
+                    <th>Review Count</th>
+                    <th>Avg Rating</th>
+                    <th>Completed Stays</th>
                 </tr>
             </thead>
             <tbody>
@@ -41,13 +41,13 @@
 
     <!-- New Requirement: Property & Host Booking Summary -->
     <div class="report-section card shadow-sm" style="margin-bottom: 32px; padding: 24px; background: white; border-radius: 12px;">
-        <h2 style="margin-bottom: 16px; color: var(--primary);"><i class="fa-solid fa-list-check"></i> Mülk & Rezervasyon Özeti</h2>
+        <h2 style="margin-bottom: 16px; color: var(--primary);"><i class="fa-solid fa-list-check"></i> Property & Booking Summary</h2>
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th>Mülk</th>
-                    <th>Ev Sahibi</th>
-                    <th>Toplam Rezervasyon</th>
+                    <th>Property</th>
+                    <th>Host</th>
+                    <th>Total Bookings</th>
                 </tr>
             </thead>
             <tbody>
@@ -64,24 +64,24 @@
 
     <!-- New Requirement: Monthly Guest Tracking -->
     <div class="report-section card shadow-sm" style="margin-bottom: 32px; padding: 24px; background: white; border-radius: 12px;">
-        <h2 style="margin-bottom: 16px; color: var(--primary);"><i class="fa-solid fa-users-viewfinder"></i> Aylık Misafir Takibi (Ay/Yıl Bazlı)</h2>
+        <h2 style="margin-bottom: 16px; color: var(--primary);"><i class="fa-solid fa-users-viewfinder"></i> Monthly Guest Tracking (By Month/Year)</h2>
         <form action="{{ url_for('admin_reports') }}" method="GET" style="display: flex; gap: 16px; margin-bottom: 20px;">
             <select name="month" style="padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                <option value="">Ay Seçin</option>
+                <option value="">Select Month</option>
                 {% for i in range(1, 13) %}
-                <option value="{{ i }}" {% if request.args.get('month') == i|string %}selected{% endif %}>{{ i }}. Ay</option>
+                <option value="{{ i }}" {% if request.args.get('month') == i|string %}selected{% endif %}>Month {{ i }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn-sm">Filtrele</button>
+            <button type="submit" class="btn-sm">Filter</button>
         </form>
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th>Mülk</th>
-                    <th>Asıl Misafir</th>
-                    <th>Yanındaki Misafir</th>
-                    <th>Yakınlık</th>
-                    <th>Giriş Tarihi</th>
+                    <th>Property</th>
+                    <th>Primary Guest</th>
+                    <th>Additional Guest</th>
+                    <th>Relationship</th>
+                    <th>Check-in Date</th>
                 </tr>
             </thead>
             <tbody>
@@ -94,7 +94,51 @@
                     <td>{{ guest.check_in }}</td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" style="text-align: center; color: #717171;">Bu kriterlere uygun kayıt bulunamadı.</td></tr>
+                <tr><td colspan="5" style="text-align: center; color: #717171;">No records found matching these criteria.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- New Requirement: AI Review Analysis -->
+    <div class="report-section card shadow-sm" style="margin-bottom: 32px; padding: 24px; background: white; border-radius: 12px;">
+        <h2 style="margin-bottom: 16px; color: var(--primary);"><i class="fa-solid fa-robot"></i> AI Review Analysis</h2>
+        <p style="color: var(--text-light); margin-bottom: 16px;">AI-driven sentiment and toxicity detection results (cached in memory per session).</p>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Guest</th>
+                    <th>Review Content</th>
+                    <th>Sentiment</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rev in ai_reviews %}
+                <tr>
+                    <td>{{ rev.property_title }}</td>
+                    <td>{{ rev.guest_name }}</td>
+                    <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ rev.comment }}">{{ rev.comment }}</td>
+                    <td>
+                        {% if rev.ai_sentiment == 'POSITIVE' %}
+                            <span style="color: #16a34a; font-weight: bold;">Positive</span>
+                        {% elif rev.ai_sentiment == 'NEGATIVE' %}
+                            <span style="color: #dc2626; font-weight: bold;">Negative</span>
+                        {% else %}
+                            <span style="color: #6b7280; font-weight: bold;">Not Analyzed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if rev.ai_status == 'REJECTED' %}
+                            <span style="color: #dc2626; font-weight: bold; background: #fee2e2; padding: 4px 8px; border-radius: 4px;">Rejected (Toxic)</span>
+                        {% else %}
+                            <span style="color: #16a34a; font-weight: bold; background: #dcfce7; padding: 4px 8px; border-radius: 4px;">Accepted</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" style="text-align: center; color: #717171;">No reviews found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

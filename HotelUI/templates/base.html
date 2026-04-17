@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +24,7 @@
                 <div class="search-bar" style="cursor: default;">
                     <span class="search-item" style="cursor: default;">HMS Plus</span>
                     <span class="divider"></span>
-                    <span class="search-item guest-btn" style="cursor: default;">Veritabanı Projesi</span>
+                    <span class="search-item guest-btn" style="cursor: default;">Database Project</span>
                 </div>
             </div>
 
@@ -37,16 +37,16 @@
                     
                     <div class="dropdown-content" id="userDropdown">
                         {% if session.get('user_id') %}
-                            <p class="welcome-text">Merhaba, {{ session.get('user_name') }}</p>
+                            <p class="welcome-text">Hello, {{ session.get('user_name') }}</p>
                             <hr>
-                            <a href="{{ url_for('dashboard') }}">Panel</a>
+                            <a href="{{ url_for('dashboard') }}">Dashboard</a>
                             {% if session.get('role') == 'admin' %}
-                                <a href="{{ url_for('admin_dashboard') }}">Admin Paneli</a>
+                                <a href="{{ url_for('admin_dashboard') }}">Admin Panel</a>
                             {% endif %}
                             <hr>
-                            <a href="{{ url_for('logout') }}" class="logout-item">Çıkış yap</a>
+                            <a href="{{ url_for('logout') }}" class="logout-item">Log out</a>
                         {% else %}
-                            <a href="{{ url_for('login') }}">Oturum açın</a>
+                            <a href="{{ url_for('login') }}">Sign in</a>
                         {% endif %}
                     </div>
                 </div>

@@ -61,10 +61,12 @@
 {% endblock %}
 
 {% block content %}
-<a href="{{ url_for('dashboard') }}" class="btn-back"><i class="fa-solid fa-chevron-left"></i> Panele Dön</a>
+<a href="{{ url_for('dashboard') }}" class="btn-back"><i class="fa-solid fa-chevron-left"></i> Back to Dashboard</a>
 <div style="margin-top: 48px;">
-    <h1>Seyahatler</h1>
-    <h2 style="font-size: 22px; margin-top: 32px; margin-bottom: 24px;">Yaklaşan veya Geçmiş Seyahatler</h2>
+    <div class="page-header" style="margin-bottom: 32px;">
+        <h1>Trips</h1>
+        <p style="color: var(--text-light); margin-top: 8px;">Upcoming or past trips.</p>
+    </div>
     
     <div style="display: flex; flex-direction: column; gap: 24px;">
         {% for booking in bookings %}
@@ -79,93 +81,88 @@
                 <div>
                     <h3 style="font-size: 18px;">{{ booking.title }}</h3>
                     <p style="color: var(--text-light); margin-bottom: 12px;">{{ booking.city }}, {{ booking.district }}</p>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <p><strong>Giriş:</strong> {{ booking.check_in.strftime('%d.%m.%Y') }}</p>
-                            <p><strong>Çıkış:</strong> {{ booking.check_out.strftime('%d.%m.%Y') }}</p>
-                            <p><strong>Misafir:</strong> {{ booking.guest_count }} Kişi</p>
-                        </div>
-                        <div style="text-align: right;">
-                            <span class="badge" style="display: inline-block; padding: 4px 12px; background: {{ '#E7F3EF' if booking.status in ['confirmed', 'completed'] else '#FEF3C7' if booking.status == 'pending' else '#FEECEB' }}; color: {{ '#1A5E4F' if booking.status in ['confirmed', 'completed'] else '#B45309' if booking.status == 'pending' else '#911A13' }}; border-radius: 16px; font-weight: bold; margin-bottom: 8px;">
-                                {{ 'Onaylandı' if booking.status == 'confirmed' else 'Beklemede' if booking.status == 'pending' else 'İptal Edildi' if booking.status == 'cancelled' else 'Tamamlandı' if booking.status == 'completed' else booking.status|capitalize }}
-                            </span>
-                            
-                            {% if booking.payment_status == 'completed' %}
-                                <p style="color: #22c55e; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Ödendi</p>
-                            {% elif booking.payment_status == 'refunded' %}
-                                <p style="color: #6366f1; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-rotate-left"></i> İade Edildi</p>
-                            {% elif booking.status not in ['completed', 'cancelled'] %}
-                                <p style="color: #ef4444; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> Ödeme Bekliyor</p>
-                            {% endif %}
-                        </div>
-                    </div>
                     
-                    <div style="font-size: 14px; color: #484848; margin-top: 8px;">
-                        {{ booking.check_in.strftime('%d.%m.%Y') }} - {{ booking.check_out.strftime('%d.%m.%Y') }} 
-                        {% if booking.check_in and booking.check_out %}
-                        ({{ (booking.check_out - booking.check_in).days }} Gece)
+                    <div style="font-size: 14px; margin-top: 16px;">
+                        <p><strong>Check-in:</strong> {{ booking.check_in.strftime('%d.%m.%Y') }}</p>
+                        <p><strong>Check-out:</strong> {{ booking.check_out.strftime('%d.%m.%Y') }}</p>
+                        <p><strong>Guest:</strong> {{ booking.guest_count }}</p>
+                        <p><strong>Total:</strong> ₺{{ booking.total_price }}</p>
+                    </div>
+
+                    <div style="margin-top: 16px;">
+                        <strong>Booking Status:</strong> 
+                        {% if booking.status == 'confirmed' %}
+                            <span style="color: #22c55e; font-weight: 600;">Confirmed</span>
+                        {% elif booking.status == 'pending' %}
+                            <span style="color: #f59e0b; font-weight: 600;">Pending</span>
+                        {% elif booking.status == 'cancelled' %}
+                            <span style="color: #ef4444; font-weight: 600;">Cancelled</span>
+                        {% else %}
+                            <span style="color: #6366f1; font-weight: 600;">Completed</span>
                         {% endif %}
                     </div>
 
-                    {% if (booking.status == 'pending' or booking.status == 'confirmed') %}
+                    <div style="margin-top: 8px;">
+                        <strong>Payment:</strong>
                         {% if booking.payment_status == 'completed' %}
-                        <div style="margin-top: 16px; padding: 12px; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd; color: #0369a1; font-size: 13px;">
-                            <i class="fa-solid fa-circle-info"></i> Ödeme tamamlandığı için tarihler kilitlenmiştir. Değişiklik için ev sahibi ile iletişime geçin.
-                        </div>
+                            <span style="color: #22c55e; font-weight: 600;">Paid</span>
+                        {% elif booking.payment_status == 'refunded' %}
+                            <span style="color: #ef4444; font-weight: 600;">Refunded</span>
                         {% else %}
+                            <span style="color: #f59e0b; font-weight: 600;">Pending Payment</span>
+                            {% if booking.status != 'cancelled' %}
+                            <a href="{{ url_for('checkout', booking_id=booking.booking_id) }}" style="display: inline-block; margin-left: 12px; background: #222; color: white; padding: 4px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600;">Pay Now</a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    {% if (booking.status == 'pending' or booking.status == 'confirmed') and booking.payment_status != 'completed' %}
                         <div style="margin-top: 16px; padding: 24px; background: #fff; border-radius: 12px; border: 1px solid #ddd; box-shadow: 0 6px 16px rgba(0,0,0,0.12); max-width: 450px;">
                             <div style="font-size: 20px; margin-bottom: 20px; font-weight: 500;">
-                                <span style="font-weight: 700;">₺{{ booking.base_price }}</span> gece
+                                <span style="font-weight: 700;">₺{{ booking.base_price }}</span> per night
                             </div>
                             
                             <form action="{{ url_for('update_booking', id=booking.booking_id) }}" method="POST">
                                 <div class="booking-inputs">
                                     <div class="input-group-grid">
                                         <div class="sub-input">
-                                            <label class="input-label">Giriş</label>
+                                            <label class="input-label">Check-in</label>
                                             <input type="text" name="check_in" id="check_in_{{ booking.booking_id }}" value="{{ booking.check_in }}" class="date-field" readonly>
                                         </div>
                                         <div class="sub-input">
-                                            <label class="input-label">Çıkış</label>
+                                            <label class="input-label">Check-out</label>
                                             <input type="text" name="check_out" id="check_out_{{ booking.booking_id }}" value="{{ booking.check_out }}" class="date-field" readonly>
                                         </div>
                                     </div>
                                 </div>
-                                <button type="submit" class="btn-update">Değişiklikleri Kaydet ve Tutarı Güncelle</button>
+                                <button type="submit" class="btn-update">Save Changes and Update Total</button>
                             </form>
                         </div>
-                        {% endif %}
                     {% endif %}
                 </div>
 
                 <div class="booking-footer" style="padding: 20px 24px; background-color: #ffffff; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 12px;">
-                        {% if booking.status == 'confirmed' and booking.payment_status != 'completed' %}
-                        <a href="{{ url_for('checkout', booking_id=booking.booking_id) }}" class="btn-sm" style="background-color: #000; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;">
-                            <i class="fa-solid fa-credit-card"></i> Hemen Öde
-                        </a>
-                        {% endif %}
-                        
                         {% if booking.status not in ['cancelled', 'completed'] %}
-                        <a href="{{ url_for('manage_booking_guests', id=booking.booking_id) }}" class="btn-sm" style="border: 1px solid #ddd; background: white; color: #222; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;">
-                            <i class="fa-solid fa-user-plus"></i> Misafir Detayları
+                        <a href="{{ url_for('manage_booking_guests', id=booking.booking_id) }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                            <i class="fa-solid fa-users"></i> Guest Details
                         </a>
                         {% endif %}
                     </div>
                     
                     <div style="display: flex; gap: 12px;">
-                        {% if booking.status == 'pending' or booking.status == 'confirmed' %}
-                        <form action="{{ url_for('cancel_booking', id=booking.booking_id) }}" method="POST" onsubmit="return confirm('Bu rezervasyonu iptal etmek istediğinize emin misiniz?')">
+                        {% if booking.status in ['pending', 'confirmed'] %}
+                        <form action="{{ url_for('cancel_booking', id=booking.booking_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
                             <button type="submit" class="btn-sm" style="border: none; background: #fff1f0; color: #ff385c; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
-                                <i class="fa-solid fa-ban"></i> Rezervasyonu İptal Et
+                                <i class="fa-solid fa-ban"></i> Cancel Booking
                             </button>
                         </form>
                         {% endif %}
                         
-                        {% if booking.status == 'completed' or booking.status == 'cancelled' %}
-                        <form action="{{ url_for('delete_booking', id=booking.booking_id) }}" method="POST" onsubmit="return confirm('Bu kaydı geçmişinizden silmek istediğinize emin misiniz?')">
+                        {% if booking.status in ['cancelled', 'completed'] %}
+                        <form action="{{ url_for('delete_booking', id=booking.booking_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this booking from your history?');">
                             <button type="submit" class="btn-sm" style="border: none; background: #f7f7f7; color: #717171; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
-                                <i class="fa-solid fa-trash-can"></i> Geçmişi Temizle
+                                <i class="fa-solid fa-trash-can"></i> Remove from History
                             </button>
                         </form>
                         {% endif %}
@@ -173,22 +170,18 @@
                 </div>
 
                 {% if booking.status == 'completed' %}
-                <div style="padding-top: 16px; border-top: 1px solid #eee;">
-                    <h4 style="margin-bottom: 12px; font-size: 15px;">{{ 'Değerlendirmenizi Güncelleyin' if booking.my_rating else 'Konaklamanızı Puanlayın' }}</h4>
-                    <form action="{{ url_for('submit_review', booking_id=booking.booking_id) }}" method="POST" style="display: flex; flex-direction: column; gap: 12px;">
-                        <div style="display: flex; gap: 12px; align-items: center;">
-                            <select name="rating" required style="padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
-                                <option value="5" {{ 'selected' if booking.my_rating == 5 }}>5 Yıldız - Harika</option>
-                                <option value="4" {{ 'selected' if booking.my_rating == 4 }}>4 Yıldız - İyi</option>
-                                <option value="3" {{ 'selected' if booking.my_rating == 3 }}>3 Yıldız - Orta</option>
-                                <option value="2" {{ 'selected' if booking.my_rating == 2 }}>2 Yıldız - Kötü</option>
-                                <option value="1" {{ 'selected' if booking.my_rating == 1 }}>1 Yıldız - Rezalet</option>
-                            </select>
-                            <input type="text" name="comment" value="{{ booking.my_comment or '' }}" placeholder="Yorumunuzu buraya yazın..." required style="flex: 1; padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; outline: none;">
-                            <button type="submit" style="background: var(--text); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
-                                {{ 'Güncelle' if booking.my_rating else 'Gönder' }}
-                            </button>
-                        </div>
+                <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <h4 style="margin-bottom: 12px; font-size: 15px;">Rate Your Stay</h4>
+                    <form action="{{ url_for('submit_review', booking_id=booking.booking_id) }}" method="POST">
+                        <select name="rating" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 8px;" required>
+                            <option value="5" {{ 'selected' if booking.my_rating == 5 }}>5 - Excellent</option>
+                            <option value="4" {{ 'selected' if booking.my_rating == 4 }}>4 - Good</option>
+                            <option value="3" {{ 'selected' if booking.my_rating == 3 }}>3 - Average</option>
+                            <option value="2" {{ 'selected' if booking.my_rating == 2 }}>2 - Poor</option>
+                            <option value="1" {{ 'selected' if booking.my_rating == 1 }}>1 - Terrible</option>
+                        </select>
+                        <textarea name="comment" rows="3" placeholder="Your comment" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 8px; font-family: inherit; font-size: 14px;">{{ booking.my_comment or '' }}</textarea>
+                        <button type="submit" class="btn-block" style="padding: 10px; font-size: 14px;">Submit Review</button>
                     </form>
                 </div>
                 {% endif %}
@@ -197,9 +190,9 @@
         {% else %}
         <div style="padding: 48px; border: 1px solid var(--border); border-radius: 12px; text-align: center;">
             <i class="fa-solid fa-suitcase" style="font-size: 48px; color: var(--border); margin-bottom: 16px;"></i>
-            <h3>Henüz seyahatleriniz yok.</h3>
-            <p style="color: var(--text-light); margin-top: 8px; margin-bottom: 24px;">Dünyayı dolaşmak için yeni maceralar aramaya başlayın.</p>
-            <a href="{{ url_for('index') }}" class="btn-block" style="display: inline-block; width: auto; padding: 12px 24px; text-decoration: none;">Keşfetmeye Başla</a>
+            <h3>No trips yet.</h3>
+            <p style="color: var(--text-light); margin-top: 8px; margin-bottom: 24px;">Start searching for new adventures to travel the world.</p>
+            <a href="{{ url_for('index') }}" class="btn-block" style="display: inline-block; width: auto; padding: 12px 24px; text-decoration: none;">Start Exploring</a>
         </div>
         {% endfor %}
     </div>
@@ -228,11 +221,8 @@
             const bid = "{{ booking.booking_id }}";
             const schedules = propSchedules[pid] || [];
             
-            // Format current check-in to match the string in schedules array
             const currentIn = "{{ booking.check_in }}";
             
-            // We want to exclude the user's own current booking from being disabled 
-            // so they can "move" it or select around it.
             const otherSchedules = schedules.filter(s => s.from !== currentIn);
 
             const fpOut = flatpickr(`#check_out_${bid}`, {
@@ -253,7 +243,6 @@
                         fpOut.set("minDate", nextDay);
                         fpOut.setDate(nextDay);
                         
-                        // Overlap prevention: find next booking
                         const sortedFuture = otherSchedules
                             .map(b => new Date(b.from))
                             .filter(d => d > checkInDate)

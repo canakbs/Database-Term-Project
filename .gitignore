@@ -11,3 +11,5 @@ venv.bak/
 .vscode/
 .idea/
 *.log
+# AI Models
+HotelUI/models/
