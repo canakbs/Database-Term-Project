@@ -470,7 +470,7 @@ UNLOCK TABLES;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `hms_citystatistics` AS select `properties`.`city` AS `city`,count(`properties`.`property_id`) AS `total_properties`,min(`properties`.`base_price`) AS `min_price`,max(`properties`.`base_price`) AS `max_price`,avg(`properties`.`base_price`) AS `avg_price` from `properties` group by `properties`.`city` having (count(`properties`.`property_id`) > 0) */;
@@ -488,7 +488,7 @@ UNLOCK TABLES;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `hms_detailedreservations` AS select `b`.`booking_id` AS `booking_id`,`u`.`full_name` AS `guest_name`,`p`.`title` AS `property_title`,`p`.`city` AS `city`,`b`.`check_in` AS `check_in`,`b`.`check_out` AS `check_out`,`b`.`total_price` AS `total_price`,`b`.`status` AS `booking_status`,`pay`.`payment_status` AS `payment_status`,`pay`.`amount` AS `paid_amount` from (((`bookings` `b` join `users` `u` on((`b`.`guest_id` = `u`.`user_id`))) join `properties` `p` on((`b`.`property_id` = `p`.`property_id`))) left join `payments` `pay` on((`b`.`booking_id` = `pay`.`booking_id`))) */;
@@ -506,7 +506,7 @@ UNLOCK TABLES;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `hms_monthlyguesttracker` AS select `p`.`property_id` AS `property_id`,`p`.`title` AS `property_title`,`u`.`full_name` AS `primary_guest_name`,`bg`.`full_name` AS `additional_guest_name`,`bg`.`relationship` AS `relationship`,`b`.`check_in` AS `check_in`,month(`b`.`check_in`) AS `stay_month`,year(`b`.`check_in`) AS `stay_year` from (((`bookings` `b` join `properties` `p` on((`b`.`property_id` = `p`.`property_id`))) join `users` `u` on((`b`.`guest_id` = `u`.`user_id`))) left join `bookingguests` `bg` on((`b`.`booking_id` = `bg`.`booking_id`))) */;
@@ -524,7 +524,7 @@ UNLOCK TABLES;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `hms_propertyanalytics` AS select `p`.`property_id` AS `property_id`,`p`.`title` AS `title`,`p`.`city` AS `city`,count(`r`.`review_id`) AS `review_count`,round(avg(`r`.`rating`),1) AS `average_rating`,(select count(0) from `bookings` `b` where ((`b`.`property_id` = `p`.`property_id`) and (`b`.`status` = 'completed'))) AS `total_stays` from (`properties` `p` left join `reviews` `r` on((`p`.`property_id` = `r`.`property_id`))) group by `p`.`property_id`,`p`.`title`,`p`.`city` */;
@@ -542,7 +542,7 @@ UNLOCK TABLES;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `hms_propertybookingsummary` AS select `p`.`property_id` AS `property_id`,`p`.`title` AS `property_title`,`u`.`full_name` AS `host_name`,count(`b`.`booking_id`) AS `total_bookings` from ((`properties` `p` join `users` `u` on((`p`.`host_id` = `u`.`user_id`))) left join `bookings` `b` on((`p`.`property_id` = `b`.`property_id`))) group by `p`.`property_id`,`p`.`title`,`u`.`full_name` */;
@@ -560,7 +560,7 @@ UNLOCK TABLES;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `hms_successfulhosts` AS select `u`.`full_name` AS `full_name`,`u`.`email` AS `email`,count(`p`.`property_id`) AS `listing_count` from (`users` `u` join `properties` `p` on((`u`.`user_id` = `p`.`host_id`))) where `u`.`user_id` in (select `properties`.`host_id` from `properties` where `properties`.`property_id` in (select `reviews`.`property_id` from `reviews` where (`reviews`.`rating` = 5))) group by `u`.`user_id` */;

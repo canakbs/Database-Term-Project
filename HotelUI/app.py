@@ -341,7 +341,7 @@ def admin_reports():
         JOIN Bookings b ON r.booking_id = b.booking_id
         JOIN Users u ON b.guest_id = u.user_id
         JOIN Properties p ON b.property_id = p.property_id
-        ORDER BY r.created_at DESC
+        ORDER BY r.created_at DESC, r.review_id DESC
         LIMIT 50
     """)
     all_reviews = cur.fetchall()
@@ -356,16 +356,16 @@ def admin_reports():
         if r and 1 <= int(r) <= 5:
             rating_dist[int(r)] += 1
 
-    # Chart data: monthly revenue (last 6 months)
+    # Chart data: daily revenue (last 30 days)
     cur.execute("""
-        SELECT DATE_FORMAT(payment_date, '%Y-%m') as month,
+        SELECT DATE(payment_date) as payment_day,
                SUM(amount) as revenue
         FROM Payments
         WHERE payment_status = 'completed'
-          AND payment_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-        GROUP BY month ORDER BY month
+          AND payment_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY payment_day ORDER BY payment_day
     """)
-    monthly_revenue = cur.fetchall()
+    daily_revenue = cur.fetchall()
 
     # Chart data: bookings by city
     cur.execute("""
@@ -387,7 +387,7 @@ def admin_reports():
         ai_reviews=all_reviews,
         sentiment_counts=sentiment_counts,
         rating_dist=rating_dist,
-        monthly_revenue=monthly_revenue,
+        monthly_revenue=daily_revenue, # Keeping the template variable name for compatibility but content is daily
         city_bookings=city_bookings
     )
 @app.route('/property/<int:id>')

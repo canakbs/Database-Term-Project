@@ -84,10 +84,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for b in bookings %}
+                    {% for b in recent_bookings %}
                     <tr>
                         <td>{{ b.guest_name }}</td>
-                        <td>{{ b.property_title }}</td>
+                        <td>{{ b.title }}</td>
                         <td><span style="font-size: 13px;">{{ b.check_in.strftime('%m/%Y') }} - {{ b.check_out.strftime('%m/%Y') }}</span></td>
                         <td>
                             <span class="badge" style="background: {{ '#e6f4ea' if b.status=='completed' else '#fef7e0' if b.status=='pending' else '#e8f0fe' if b.status=='confirmed' else '#fce8e6' }}; 

@@ -18,7 +18,7 @@
 
         <!-- Revenue Chart -->
         <div class="chart-card chart-card--wide">
-            <h2><i class="fa-solid fa-wallet"></i> Monthly Revenue (Last 6 Months)</h2>
+            <h2><i class="fa-solid fa-wallet"></i> Daily Revenue (Last 30 Days)</h2>
             <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
         </div>
 
@@ -60,6 +60,7 @@
                 <tr>
                     <th>Property</th>
                     <th>Guest</th>
+                    <th>Date</th>
                     <th>Review</th>
                     <th>Rating</th>
                     <th>Sentiment</th>
@@ -71,6 +72,7 @@
                 <tr>
                     <td>{{ rev.property_title }}</td>
                     <td>{{ rev.guest_name }}</td>
+                    <td style="font-size: 12px; color: var(--text-light);">{{ rev.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
                     <td class="comment-cell" title="{{ rev.comment }}">{{ rev.comment }}</td>
                     <td>
                         <span class="star-rating">
@@ -229,22 +231,44 @@ const CHART_COLORS = {
 // 1. Revenue Chart
 const revenueCtx = document.getElementById('revenueChart');
 new Chart(revenueCtx, {
-    type: 'bar',
+    type: 'line',
     data: {
-        labels: {{ monthly_revenue | map(attribute='month') | list | tojson }},
+        labels: {{ monthly_revenue | map(attribute='payment_day') | map('string') | list | tojson }},
         datasets: [{
             label: 'Revenue (₺)',
             data: {{ monthly_revenue | map(attribute='revenue') | list | tojson }},
-            backgroundColor: 'rgba(255, 56, 92, 0.2)',
+            backgroundColor: 'rgba(255, 56, 92, 0.1)',
             borderColor: CHART_COLORS.primary,
-            borderWidth: 2,
-            borderRadius: 8,
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 5,
+            pointHoverRadius: 8,
+            pointBackgroundColor: CHART_COLORS.primary,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
         }]
     },
     options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { callback: v => '₺' + v.toLocaleString() } } }
+        plugins: { 
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: (context) => ' ₺' + context.parsed.y.toLocaleString()
+                }
+            }
+        },
+        scales: { 
+            y: { 
+                beginAtZero: true, 
+                ticks: { callback: v => '₺' + v.toLocaleString() },
+                grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            x: {
+                grid: { display: false }
+            }
+        }
     }
 });
 
