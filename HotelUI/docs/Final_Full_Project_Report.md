@@ -2,7 +2,7 @@
 
 **Academic Course:** CSE 204: Database Systems  
 **Project Group:** 17  
-**Project Title:** HMS Plus — AI-Integrated Airbnb Clone  
+**Project Title:** HMS Plus — AI-Integrated Rentogram  
 **Academic Year:** Spring 2026
 
 ---
@@ -84,7 +84,7 @@ Unlike standard database projects, HMS Plus implements **Persistence in AI-Drive
 ---
 
 ## 7. User Interface & Localization
-- **Design:** Modern "Airbnb-style" interface using Vanilla CSS and glassmorphism.
+- **Design:** Modern "Rentogram-style" interface using Vanilla CSS and glassmorphism.
 - **Localization:** 100% English interface for both code and data (titles, reviews, and amenities).
 - **Responsiveness:** Dynamic Chart.js visualizations built into the admin panel.
 

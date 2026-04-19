@@ -1,6 +1,6 @@
-# HMS Plus — Airbnb Clone | Database Systems Group Project
+# HMS Plus — Rentogram Clone | Database Systems Group Project
 
-> A full-stack accommodation management system inspired by Airbnb, developed with Python Flask + MySQL.
+> A full-stack accommodation management system inspired by Rentogram, developed with Python Flask + MySQL.
 
 ---
 
@@ -41,7 +41,7 @@ cp .env.example .env
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_password
-DB_NAME=airbnb_clone
+DB_NAME=rentogram_clone
 SECRET_KEY=your_secret_key
 ```
 
@@ -49,16 +49,16 @@ SECRET_KEY=your_secret_key
 
 #### Option A: Quick Restore (Recommended for Teammates)
 This will set up the exact same database state including all translated reviews and properties.
-1. Create the database in MySQL: `CREATE DATABASE airbnb_clone;`
+1. Create the database in MySQL: `CREATE DATABASE rentogram_clone;`
 2. Import the final dump:
 ```bash
-mysql -u root -p airbnb_clone < database/final_dump.sql
+mysql -u root -p rentogram_clone < database/final_dump.sql
 ```
 
 #### Option B: Clean Install
 1. Create the database and tables:
 ```bash
-mysql -u root -p < database/setup_airbnb.sql
+mysql -u root -p < database/setup_rentogram.sql
 ```
 2. Populate data using scripts:
 ```bash
@@ -101,7 +101,7 @@ HotelUI/
 ├── app.py                    # Main Flask application & routes
 ├── ai_review.py              # AI Sentiment/Toxicity analysis pipeline
 ├── database/
-│   ├── setup_airbnb.sql      # Schema definition
+│   ├── setup_rentogram.sql      # Schema definition
 │   └── final_dump.sql        # Full database dump (data included)
 ├── docs/
 │   ├── Final_Project_Report.md

@@ -1,8 +1,8 @@
 # CSE 204 Spring 2026 - Database Systems Final Project Report
-**Group 17: Hotel Management System (HMS) - Airbnb Clone**
+**Group 17: Hotel Management System (HMS) - Rentogram**
 
 ## 1. Project Overview
-This project is a high-end web application (Airbnb Clone) built using Python/Flask and MySQL. It facilitates property management for hosts and seamless booking experiences for guests, featuring a robust role-based access control system and advanced financial reporting.
+This project is a high-end web application (Rentogram) built using Python/Flask and MySQL. It facilitates property management for hosts and seamless booking experiences for guests, featuring a robust role-based access control system and advanced financial reporting.
 
 ---
 

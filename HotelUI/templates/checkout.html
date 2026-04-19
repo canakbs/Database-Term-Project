@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Make Payment - Airbnb Clone{% endblock %}
+{% block title %}Make Payment - Rentogram{% endblock %}
 
 {% block content %}
 <div class="checkout-container">
@@ -69,21 +69,21 @@
                 <div class="installment-section" style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #f8f8f8;">
                     <h3 style="margin-bottom: 16px;"><i class="fa-solid fa-receipt"></i> Select Payment Plan</h3>
                     <div class="form-group">
-                        <select name="installments" class="installment-select">
+                        <select name="installments" id="installments" class="installment-select" onchange="updatePrice()">
                             <option value="1">Single Payment (Full Amount - ₺{{ booking.total_price }})</option>
-                            <option value="3">3 Installments (₺{{ (booking.total_price / 3)|round(2) }} / month)</option>
-                            <option value="6">6 Installments (₺{{ (booking.total_price / 6)|round(2) }} / month)</option>
-                            <option value="9">9 Installments (₺{{ (booking.total_price / 9)|round(2) }} / month)</option>
-                            <option value="12">12 Installments (₺{{ (booking.total_price / 12)|round(2) }} / month)</option>
+                            <option value="3">3 Installments (10% interest)</option>
+                            <option value="6">6 Installments (25% interest)</option>
+                            <option value="9">9 Installments (40% interest)</option>
+                            <option value="12">12 Installments (55% interest)</option>
                         </select>
-                        <p class="demo-notice">* Interst-free for demo purposes.</p>
+                        <p class="demo-notice">* Interest: 5% per extra installment.</p>
                     </div>
                 </div>
 
                 <input type="hidden" name="payment_method" value="credit_card">
-                <input type="hidden" name="amount" value="{{ booking.total_price }}">
+                <input type="hidden" name="amount" id="final_amount" value="{{ booking.total_price }}">
                 
-                <button type="submit" class="btn-pay-main">Pay ₺{{ booking.total_price }}</button>
+                <button type="submit" class="btn-pay-main" id="pay_button">Pay ₺{{ booking.total_price }}</button>
             </div>
 
             <div class="order-summary card shadow-sm">
@@ -93,9 +93,13 @@
                         <span>Stay Period</span>
                         <span>{{ booking.check_in }} - {{ booking.check_out }}</span>
                     </div>
+                    <div class="summary-row" id="interest_row" style="display: none; color: #e31c5f;">
+                        <span>Interest Surcharge</span>
+                        <span id="interest_amount">₺0.00</span>
+                    </div>
                     <div class="summary-row total">
                         <span>Total (TRY)</span>
-                        <span>₺{{ booking.total_price }}</span>
+                        <span id="display_total">₺{{ booking.total_price }}</span>
                     </div>
                 </div>
                 <div class="secure-badge">
@@ -108,6 +112,38 @@
 </div>
 
 <script>
+const basePrice = {{ booking.total_price }};
+
+function updatePrice() {
+    const installments = parseInt(document.getElementById('installments').value);
+    const payBtn = document.getElementById('pay_button');
+    const displayTotal = document.getElementById('display_total');
+    const finalAmountInput = document.getElementById('final_amount');
+    const interestRow = document.getElementById('interest_row');
+    const interestAmountDisplay = document.getElementById('interest_amount');
+    
+    let interestRate = 0;
+    if (installments > 1) {
+        interestRate = (installments - 1) * 0.05;
+    }
+    
+    const surcharge = basePrice * interestRate;
+    const finalPrice = basePrice + surcharge;
+    
+    const formattedPrice = finalPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
+    payBtn.innerText = `Pay ₺${formattedPrice}`;
+    displayTotal.innerText = `₺${formattedPrice}`;
+    finalAmountInput.value = finalPrice.toFixed(2);
+    
+    if (surcharge > 0) {
+        interestRow.style.display = 'flex';
+        interestAmountDisplay.innerText = `₺${surcharge.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
+    } else {
+        interestRow.style.display = 'none';
+    }
+}
+
 function toggleNewCard(show) {
     const fields = document.getElementById('new_card_fields');
     fields.style.display = show ? 'block' : 'none';
@@ -118,6 +154,15 @@ function toggleNewCard(show) {
         input.required = show;
     });
 }
+
+// Expiry Mask MM/YYYY
+document.querySelector('input[name="expiry"]').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 6);
+    }
+    e.target.value = value;
+});
 </script>
 
 <style>

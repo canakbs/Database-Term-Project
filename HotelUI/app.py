@@ -580,6 +580,12 @@ def checkout(booking_id):
         
         # Process installments if selected
         installment_count = int(request.form.get('installments', 1))
+
+        # Interest calculation: (installments - 1) * 5%
+        base_amount = float(amount)
+        if installment_count > 1:
+            interest_rate = (installment_count - 1) * 0.05
+            amount = base_amount * (1 + interest_rate)
         
         cur.execute("""
             INSERT INTO Payments (booking_id, amount, payment_method, payment_status, transaction_ref)
@@ -588,7 +594,7 @@ def checkout(booking_id):
         payment_id = cur.lastrowid
         
         if installment_count > 1:
-            installment_amount = float(amount) / installment_count
+            installment_amount = amount / installment_count
             from datetime import timedelta, datetime
             for i in range(1, installment_count + 1):
                 due_date = datetime.now() + timedelta(days=30 * (i - 1))

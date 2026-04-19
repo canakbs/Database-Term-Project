@@ -2,13 +2,13 @@
 
 **Course:** Database Systems Introduction  
 **Team:** Group 17  
-**Project:** HMS Plus — AI-Powered Airbnb Clone  
+**Project:** HMS Plus — AI-Powered Rentogram  
 **Academic Term:** Spring 2026
 
 ---
 
 ## 1. Executive Summary
-HMS Plus is a comprehensive web-based hotel and property management system designed to simulate the robust functionality of modern platforms like Airbnb. The project emphasizes advanced database design (3NF normalization), complex SQL query logic (JOINs, Views, Subqueries), and front-end excellence. A unique selling point is its **Dual-Model AI Sentiment Pipeline**, which filters and classifies guest reviews in real-time.
+HMS Plus is a comprehensive web-based hotel and property management system designed to simulate the robust functionality of modern platforms like Rentogram. The project emphasizes advanced database design (3NF normalization), complex SQL query logic (JOINs, Views, Subqueries), and front-end excellence. A unique selling point is its **Dual-Model AI Sentiment Pipeline**, which filters and classifies guest reviews in real-time.
 
 ---
 
