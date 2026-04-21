@@ -48,63 +48,7 @@
 
     </div>
 
-    <!-- ─── SECTION 1: AI Review Analysis ─── -->
-    <div class="report-section">
-        <div class="section-header">
-            <h2><i class="fa-solid fa-robot"></i> AI Review Analysis</h2>
-            <p class="section-desc">All reviews processed with toxicity detection (toxic-bert) and sentiment analysis (DistilBERT).</p>
-        </div>
-        <div class="table-wrap">
-        <table class="report-table">
-            <thead>
-                <tr>
-                    <th>Property</th>
-                    <th>Guest</th>
-                    <th>Date</th>
-                    <th>Review</th>
-                    <th>Rating</th>
-                    <th>Sentiment</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for rev in ai_reviews %}
-                <tr>
-                    <td>{{ rev.property_title }}</td>
-                    <td>{{ rev.guest_name }}</td>
-                    <td style="font-size: 12px; color: var(--text-light);">{{ rev.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-                    <td class="comment-cell" title="{{ rev.comment }}">{{ rev.comment }}</td>
-                    <td>
-                        <span class="star-rating">
-                            {% for i in range(rev.rating|int) %}<i class="fa-solid fa-star" style="color:#fbbf24;font-size:11px;"></i>{% endfor %}
-                        </span>
-                    </td>
-                    <td>
-                        {% if rev.ai_sentiment == 'POSITIVE' %}
-                            <span class="badge-sentiment pos"><i class="fa-solid fa-face-smile"></i> Positive</span>
-                        {% elif rev.ai_sentiment == 'NEGATIVE' %}
-                            <span class="badge-sentiment neg"><i class="fa-solid fa-face-frown"></i> Negative</span>
-                        {% elif rev.ai_sentiment == 'NEUTRAL' %}
-                            <span class="badge-sentiment neu"><i class="fa-solid fa-face-meh"></i> Neutral</span>
-                        {% else %}
-                            <span class="badge-sentiment gray"><i class="fa-solid fa-minus"></i> &mdash;</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if rev.ai_status == 'REJECTED' %}
-                            <span class="badge-status rejected"><i class="fa-solid fa-ban"></i> Rejected</span>
-                        {% else %}
-                            <span class="badge-status accepted"><i class="fa-solid fa-check"></i> Accepted</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr><td colspan="6" class="empty-row">No reviews found.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        </div>
-    </div>
+
 
     <!-- ─── SECTION 2: Property Analytics ─── -->
     <div class="report-section">
@@ -214,6 +158,63 @@
         </div>
     </div>
 
+    <!-- ─── AI Review Analysis (Moved to Bottom) ─── -->
+    <div class="report-section">
+        <div class="section-header">
+            <h2><i class="fa-solid fa-robot"></i> AI Review Analysis</h2>
+            <p class="section-desc">All reviews processed with toxicity detection (toxic-bert) and sentiment analysis (DistilBERT).</p>
+        </div>
+        <div class="table-wrap">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Guest</th>
+                    <th>Date</th>
+                    <th>Review</th>
+                    <th>Rating</th>
+                    <th>Sentiment</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rev in ai_reviews %}
+                <tr>
+                    <td>{{ rev.property_title }}</td>
+                    <td>{{ rev.guest_name }}</td>
+                    <td style="font-size: 12px; color: var(--text-light);">{{ rev.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td class="comment-cell" title="{{ rev.comment }}">{{ rev.comment }}</td>
+                    <td>
+                        <span class="star-rating">
+                            {% for i in range(rev.rating|int) %}<i class="fa-solid fa-star" style="color:#fbbf24;font-size:11px;"></i>{% endfor %}
+                        </span>
+                    </td>
+                    <td>
+                        {% if rev.ai_sentiment == 'POSITIVE' %}
+                            <span class="badge-sentiment pos"><i class="fa-solid fa-face-smile"></i> Positive</span>
+                        {% elif rev.ai_sentiment == 'NEGATIVE' %}
+                            <span class="badge-sentiment neg"><i class="fa-solid fa-face-frown"></i> Negative</span>
+                        {% elif rev.ai_sentiment == 'NEUTRAL' %}
+                            <span class="badge-sentiment neu"><i class="fa-solid fa-face-meh"></i> Neutral</span>
+                        {% else %}
+                            <span class="badge-sentiment gray"><i class="fa-solid fa-minus"></i> &mdash;</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if rev.ai_status == 'REJECTED' %}
+                            <span class="badge-status rejected"><i class="fa-solid fa-ban"></i> Rejected</span>
+                        {% else %}
+                            <span class="badge-status accepted"><i class="fa-solid fa-check"></i> Accepted</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="empty-row">No reviews found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
 </div>
 
 <!-- ─── CHART.JS INITIALIZATION ─── -->
